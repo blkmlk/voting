@@ -12,6 +12,7 @@
 <script>
 import Sidebar from "./sidebar/Sidebar";
 import { mapState, mapMutations } from "vuex";
+
 export default {
   name: "Layout",
 
