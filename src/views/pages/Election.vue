@@ -15,7 +15,7 @@
             <div v-else>{{ name }} expires in {{ contractRemainingTime }}</div>
         </v-toolbar-title>
         <v-spacer/>
-        <div v-if="account == contractOwner && !contractExpired" class="mr-5">
+        <div v-if="account === contractOwner && !contractExpired" class="mr-5">
             <v-btn v-if="!editMode" color="green" @click="edit">Edit</v-btn>
             <div v-else>
                 <v-btn color="blue" @click="save">Save</v-btn>
@@ -33,7 +33,7 @@
             />
             <h4 class="mt-2 mb-2 title blue-grey--text text--darken-2 font-weight-regular">{{n.name}} {{n.surname}}</h4>
             <v-btn v-if="vote == null && !contractExpired" elevation="2" @click="sendVote(key)"> Vote </v-btn>
-            <div v-else-if="vote != null && vote.candidateID == key">
+            <div v-else-if="vote != null && vote.candidateID === key">
                 <v-btn v-if="!voteExpired && !contractExpired" elevation="2" @click="sendRetract()" color="blue">
                   Retract in {{ voteRemainingTime }}</v-btn>
                 <v-progress-linear color="blue" class="mt-6" v-else-if="contractExpired" elevation="2" :value="getVotes(key)" height="25">
