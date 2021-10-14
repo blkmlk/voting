@@ -43,6 +43,11 @@ export default new Router({
                     component: () => import('@/views/dashboard/BasicDashboard'),
                 },
                 {
+                    name: 'Factory',
+                    path: 'factory',
+                    component: () => import('@/views/pages/Factory'),
+                },
+                {
                     name: 'Election',
                     path: 'election/:address',
                     component: () => import('@/views/pages/Election'),

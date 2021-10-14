@@ -7,6 +7,7 @@ contract Election is IElection {
     address owner;
     string name;
     uint expiresAt;
+    bool started;
 
     Candidate[] public candidates;
     mapping(address => Vote) votes;
@@ -16,10 +17,18 @@ contract Election is IElection {
         _;
     }
 
-    constructor(address _owner, string memory _name, uint _expiresAfter) {
+    constructor(address _owner, string memory _name) {
         owner = _owner;
         name = _name;
-        expiresAt = block.timestamp + _expiresAfter;
+    }
+
+    // @override
+    function start(uint _expiresIn) external override returns(bool) {
+        require(!started);
+
+        expiresAt = block.timestamp + _expiresIn;
+        started = true;
+        return true;
     }
 
     // @override
@@ -33,16 +42,18 @@ contract Election is IElection {
         }
 
         return Info({
+            started: started,
             owner: owner,
             name: name,
             expiresAt: expiresAt,
-            vote: votes[msg.sender],
             candidates: tmp
         });
     }
 
     // @override
     function addCandidates(Candidate[] calldata _candidates) external override ownerOnly returns(uint) {
+        require(!started);
+
         for (uint i = 0; i < _candidates.length; i++) {
             candidates.push(_candidates[i]);
             candidates[candidates.length - 1].votes = 0;
@@ -54,6 +65,7 @@ contract Election is IElection {
 
     // @override
     function vote(uint _candidateId) external override returns(bool) {
+        require(started);
         require(block.timestamp < expiresAt);
         require(!votes[msg.sender].exists);
         require(_candidateId < candidates.length);
@@ -72,7 +84,13 @@ contract Election is IElection {
     }
 
     // @override
+    function getVote() external override view returns(Vote memory) {
+        return votes[msg.sender];
+    }
+
+    // @override
     function retract() external override returns(bool) {
+        require(started);
         require(block.timestamp < expiresAt);
 
         Vote memory v = votes[msg.sender];

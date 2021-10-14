@@ -1,7 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import getWeb3 from './getWeb3';
-
 Vue.use(Vuex)
 
 export default new Vuex.Store({
@@ -25,12 +24,14 @@ export default new Vuex.Store({
             state.SidebarColor = payload
         }, 
         SET_WEB3 (state, payload) {
-            state.web3 = payload.web3;
-            state.accounts = payload.accounts;
+            state.web3 = payload;
 
             state.web3.eth.subscribe('newBlockHeaders', async (error, event) => {
                 state.newBlock = event;
             })
+        },
+        SET_ACCOUNTS (state, payload) {
+            state.accounts = payload;
         }
     },
     actions: {
@@ -41,12 +42,18 @@ export default new Vuex.Store({
                 return instance;
             }).then(instance => {
                 return instance.eth.getAccounts();
-            }).then(accounts => {
-                commit('SET_WEB3', {
-                    web3: web3,
-                    accounts: accounts,
-                });
-            })
+            }).then(function(accounts) {
+                commit('SET_WEB3', web3);
+                commit('SET_ACCOUNTS', accounts);
+
+                setInterval(function () {
+                    web3.eth.getAccounts().then(function (accounts) {
+                        if (accounts[0] !== this.state.accounts[0]) {
+                            commit('SET_ACCOUNTS', accounts);
+                        }
+                    }.bind(this))
+                }.bind(this), 500);
+            }.bind(this))
         }
     }
 })

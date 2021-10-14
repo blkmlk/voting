@@ -2,10 +2,10 @@
 pragma solidity ^0.8.0;
 
 struct Info {
+    bool started;
     address owner;
     string name;
     uint expiresAt;
-    Vote vote;
     Candidate[] candidates;
 }
 
@@ -24,8 +24,10 @@ struct Vote {
 }
 
 interface IElection {
+    function start(uint) external returns(bool);
     function getInfo() external view returns(Info memory);
     function addCandidates(Candidate[] calldata) external returns(uint);
     function vote(uint) external returns(bool);
+    function getVote() external view returns(Vote memory);
     function retract() external returns(bool);
 }

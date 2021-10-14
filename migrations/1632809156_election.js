@@ -1,9 +1,7 @@
 let Election = artifacts.require('Election');
 
 module.exports = async function (_deployer, _network, _accounts) {
-  let expiresIn = 15 * 60; // 10 minutes
-
-  _deployer.deploy(Election, _accounts[0], 'Test Election', expiresIn).then(instance => {
+  _deployer.deploy(Election, _accounts[0], 'Test Election').then(instance => {
     instance.addCandidates([{
       name: "John",
       surname: "Wick",
