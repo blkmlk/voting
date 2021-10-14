@@ -12,6 +12,7 @@ export default new Vuex.Store({
         web3: null,
         newBlock: null,
         accounts: [],
+        networkId: 0,
       },
     mutations: {
         SET_SIDEBAR_DRAWER (state, payload) {
@@ -32,6 +33,9 @@ export default new Vuex.Store({
         },
         SET_ACCOUNTS (state, payload) {
             state.accounts = payload;
+        },
+        SET_NETWORK_ID (state, payload) {
+            state.networkId = payload;
         }
     },
     actions: {
@@ -43,7 +47,6 @@ export default new Vuex.Store({
             }).then(instance => {
                 return instance.eth.getAccounts();
             }).then(function(accounts) {
-                commit('SET_WEB3', web3);
                 commit('SET_ACCOUNTS', accounts);
 
                 setInterval(function () {
@@ -53,7 +56,11 @@ export default new Vuex.Store({
                         }
                     }.bind(this))
                 }.bind(this), 500);
-            }.bind(this))
+                return web3.eth.net.getId();
+            }.bind(this)).then(function (id) {
+                commit('SET_NETWORK_ID', id);
+                commit('SET_WEB3', web3);
+            })
         }
     }
 })

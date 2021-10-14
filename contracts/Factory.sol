@@ -10,9 +10,8 @@ contract Factory {
     constructor() {
     }
 
-    function createElection(address _owner, string calldata _name) external {
-        require(_owner != address(0));
-        elections.push(new Election(_owner, _name));
+    function createElection(string calldata _name) external {
+        elections.push(new Election(msg.sender, _name));
     }
 
     function getElections() public view returns (IElection[] memory) {

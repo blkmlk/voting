@@ -24,7 +24,10 @@ export default {
       electionInfo:[],
     }
   },
-  mounted() {
+  created() {
+    if (this.web3Connected) {
+      this.loadContract();
+    }
   },
   computed: {
     web3Connected() {
@@ -35,6 +38,9 @@ export default {
     },
     account() {
       return this.$store.state.accounts[0];
+    },
+    networkId() {
+      return this.$store.state.networkId;
     },
     getElections() {
       let elections = [];
@@ -66,6 +72,15 @@ export default {
     getAddress(idx) {
       return this.elections[idx]['_address'];
     },
+    loadContract() {
+      try {
+        let contract = new Contract(Factory.abi, Factory.networks[this.networkId].address);
+        contract.setProvider(this.$store.state.web3.currentProvider);
+        this.factory = contract;
+      } catch(e) {
+        console.log(e);
+      }
+    }
   },
   watch: {
     async elections(elections) {
@@ -111,15 +126,11 @@ export default {
         this.factory = null;
         return;
       }
-
-      try {
-        let contract = new Contract(Factory.abi, Factory.networks['5777'].address);
-        contract.setProvider(this.$store.state.web3.currentProvider);
-        this.factory = contract;
-      } catch(e) {
-        console.log(e);
-      }
+      this.loadContract();
     },
+    newBlock() {
+      this.loadContract();
+    }
   }
 }
 </script>
