@@ -35,8 +35,10 @@ contract Election is IElection {
     function getInfo() external override view returns(Info memory) {
         Candidate[] memory tmp = candidates;
 
+        uint votes = 0;
         if (block.timestamp < expiresAt) {
             for (uint i = 0; i < tmp.length; i++) {
+                votes += tmp[i].votes;
                 tmp[i].votes = 0;
             }
         }
@@ -45,6 +47,7 @@ contract Election is IElection {
             started: started,
             owner: owner,
             name: name,
+            votes: votes,
             expiresAt: expiresAt,
             candidates: tmp
         });

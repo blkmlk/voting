@@ -59,9 +59,9 @@ export default {
   data: () => ({
     items: [
       {
-        title: "Dashboard",
-        icon: "mdi-view-dashboard",
-        to: "/dashboard/basic-dashboard"
+        title: "Elections",
+        icon: "mdi-vote",
+        to: "/factory"
       },
 
       {

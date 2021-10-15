@@ -1,8 +1,42 @@
 <template>
-  <div>
-    <v-data-table :headers="headers" :items="getElections" @click:row="goToElection">
-    </v-data-table>
-  </div>
+  <v-container>
+    <v-row justify="center">
+      <v-data-table :headers="headers" :items="getElections" @click:row="goToElection">
+        <template v-slot:top>
+          <v-toolbar flat>
+            <v-toolbar-title>Elections</v-toolbar-title>
+            <v-spacer></v-spacer>
+            <v-dialog v-model="newDialog" max-width="500px">
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn color="primary" dark v-bind="attrs" v-on="on">
+                  Create
+                </v-btn>
+              </template>
+              <v-card>
+                <v-card-title>
+                  <span class="text-h5">New Election</span>
+                </v-card-title>
+                <v-card-text>
+                  <v-container>
+                    <v-row>
+                      <v-col cols="12">
+                        <v-text-field v-model="newElectionName" label="Name"></v-text-field>
+                      </v-col>
+                    </v-row>
+                  </v-container>
+                </v-card-text>
+                <v-card-actions>
+                  <v-spacer></v-spacer>
+                  <v-btn color="blue darken-1" text @click="create"> Create </v-btn>
+                  <v-btn color="blue darken-1" text @click="closeNewDialog"> Cancel </v-btn>
+                </v-card-actions>
+              </v-card>
+            </v-dialog>
+          </v-toolbar>
+        </template>
+      </v-data-table>
+    </v-row>
+  </v-container>
 </template>
 
 <script>
@@ -17,8 +51,12 @@ export default {
       headers: [
         {text: "Name", value: "name"},
         {text: "Owner", value: "owner"},
-        {text: "Expires", value: "expires"}
+        {text: "Candidates", value: "candidates"},
+        {text: "Votes", value: "votes"},
+        {text: "Expires At", value: "expires"}
       ],
+      newDialog: false,
+      newElectionName: "",
       factory: null,
       elections: [],
       electionInfo:[],
@@ -49,6 +87,8 @@ export default {
           id: i,
           name: this.electionInfo[i].name,
           owner: this.electionInfo[i].owner,
+          candidates: this.electionInfo[i].candidates.length,
+          votes: this.electionInfo[i].votes,
           expires: this.getExpiration(this.electionInfo[i].expiresAt),
         })
       }
@@ -57,17 +97,40 @@ export default {
     },
   },
   methods: {
+    create() {
+      if (this.newElectionName.length === 0) {
+        return;
+      }
+
+      if (this.factory === null) {
+        return;
+      }
+
+      this.factory.methods.createElection(this.newElectionName).send({from: this.account}).on('receipt', function () {
+        this.newElectionName = "";
+        this.newDialog = false;
+      }.bind(this))
+
+      return;
+    },
+    closeNewDialog() {
+      this.newDialog = false;
+    },
     goToElection(value) {
       this.$router.push("/election/" + this.getAddress(value.id))
     },
     getExpiration(expiresAt) {
+      if (parseInt(expiresAt) === 0) {
+        return "not started"
+      }
+
       let now = Date.now();
 
       if (expiresAt * 1000 <= now) {
         return "expired";
       }
 
-      new Date(expiresAt * 1000).toString();
+      return (new Date(expiresAt * 1000)).toString();
     },
     getAddress(idx) {
       return this.elections[idx]['_address'];

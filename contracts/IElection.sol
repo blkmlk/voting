@@ -6,6 +6,7 @@ struct Info {
     address owner;
     string name;
     uint expiresAt;
+    uint votes;
     Candidate[] candidates;
 }
 

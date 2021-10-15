@@ -20,7 +20,7 @@
         <v-btn v-if="needToSave" color="grey" class="mr-5" @click="cancel">Cancel</v-btn>
         <v-dialog v-model="startDialog" max-width="500px">
             <template v-slot:activator="{on,attrs}">
-              <v-btn color="red" v-bind="attrs" v-on="on">Start</v-btn>
+              <v-btn v-if="canStart" color="red" v-bind="attrs" v-on="on">Start</v-btn>
             </template>
             <v-card>
               <v-card-title>
@@ -171,6 +171,13 @@ export default {
     }
   },
   computed: {
+    canStart() {
+      if (this.candidates.length === 0) {
+        return false;
+      }
+
+      return true;
+    },
     canVote() {
       if (this.contractExpired) {
         return false;
