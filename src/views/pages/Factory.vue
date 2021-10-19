@@ -1,7 +1,7 @@
 <template>
   <v-container>
     <v-row justify="center">
-      <v-data-table :headers="headers" :items="getElections" @click:row="goToElection">
+      <v-data-table no-data-text="" height="500" :headers="headers" :items="getElections" @click:row="goToElection">
         <template v-slot:top>
           <v-toolbar flat>
             <v-toolbar-title>Elections</v-toolbar-title>

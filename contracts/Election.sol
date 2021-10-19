@@ -25,6 +25,7 @@ contract Election is IElection {
     // @override
     function start(uint _expiresIn) external override returns(bool) {
         require(!started);
+        require(candidates.length > 0);
 
         expiresAt = block.timestamp + _expiresIn;
         started = true;

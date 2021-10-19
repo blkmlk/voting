@@ -3,7 +3,7 @@ import Router from 'vue-router'
 
 Vue.use(Router)
 
-export default new Router({
+let router = new Router({
     mode: 'hash',
     base: process.env.BASE_URL,
     routes: [
@@ -57,3 +57,10 @@ export default new Router({
 
     ],
 })
+
+router.beforeEach(function (to, from, next) {
+    window.prevUrl = from.path;
+    next();
+})
+
+export default router;

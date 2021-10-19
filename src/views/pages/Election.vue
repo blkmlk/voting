@@ -10,7 +10,10 @@
 </v-container>
 <v-container v-else>
     <v-app-bar absolute color="white">
-        <v-toolbar-title class="ml-5 black--text">
+      <v-btn v-if="canGoBack" @click="goBack" class="mx-2 text-center" dark color="#F5F5F5">
+        <v-icon dark color="#212121"> mdi-arrow-left-bold </v-icon>
+      </v-btn>
+      <v-toolbar-title class="ml-5 black--text">
           {{name}}
           {{contractState}}
         </v-toolbar-title>
@@ -171,6 +174,9 @@ export default {
     }
   },
   computed: {
+    canGoBack() {
+      return window.prevUrl !== "/";
+    },
     canStart() {
       if (this.candidates.length === 0) {
         return false;
@@ -267,6 +273,9 @@ export default {
     },
   },
   methods: {
+    goBack() {
+      this.$router.go(-1);
+    },
     getAvatar(seed) {
       return this.generator.generateRandomAvatar(seed);
     },
