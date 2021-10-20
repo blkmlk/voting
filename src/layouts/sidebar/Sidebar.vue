@@ -29,7 +29,7 @@
         v-for="item in items"
         :key="item.title"
         :to="item.to"
-        :active-class="`success white--text`"
+        :active-class="`primary white--text`"
         link
       >
         <v-list-item-icon>
