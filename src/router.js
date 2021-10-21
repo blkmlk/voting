@@ -20,9 +20,9 @@ let router = new Router({
                 },
 
                 {
-                    name: 'Profile',
-                    path: 'pages/profile',
-                    component: () => import('@/views/pages/Profile'),
+                    name: 'Crowdfunding',
+                    path: 'pages/crowdfunding',
+                    component: () => import('@/views/pages/CrowdfundingFactory'),
                 },
 
                 {
@@ -45,7 +45,7 @@ let router = new Router({
                 {
                     name: 'Factory',
                     path: 'factory',
-                    component: () => import('@/views/pages/Factory'),
+                    component: () => import('@/views/pages/ElectionFactory'),
                 },
                 {
                     name: 'Election',

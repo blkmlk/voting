@@ -65,9 +65,9 @@ export default {
       },
 
       {
-        title: "Profile",
-        icon: "mdi-account-circle",
-        to: "/pages/profile"
+        title: "Crowdfunding",
+        icon: "mdi-hand-coin-outline",
+        to: "/pages/crowdfunding"
       },
 
       {
