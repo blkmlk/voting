@@ -9,6 +9,7 @@ struct Info {
     address target;
     uint startedAt;
     uint expiresAt;
+    bool ended;
 }
 
 struct Donation {

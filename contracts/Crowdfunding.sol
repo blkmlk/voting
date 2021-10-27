@@ -6,11 +6,13 @@ import "./ICrowdfunding.sol";
 contract Crowdfunding is ICrowdfunding {
     address owner;
     string description;
+    uint currentAmount;
     uint targetAmount;
     address target;
     mapping(address => Donation) donations;
     uint startedAt;
     uint expiresAt;
+    bool ended;
 
     event NewDonation(string message, uint amount);
 
@@ -25,8 +27,9 @@ contract Crowdfunding is ICrowdfunding {
     }
 
     function start(uint _expiresIn) external {
-        require(msg.sender == owner);
-        require(_expiresIn > 0);
+        require(msg.sender == owner, "CF: wrong address");
+        require(_expiresIn > 0, "CF: wrong duration");
+        require(expiresAt == 0, "CF: already started");
 
         startedAt = block.timestamp;
         expiresAt = startedAt + _expiresIn;
@@ -36,35 +39,45 @@ contract Crowdfunding is ICrowdfunding {
         return Info({
             owner: owner,
             description: description,
-            currentAmount: address(this).balance,
+            currentAmount: currentAmount,
             targetAmount: targetAmount,
             target: target,
             startedAt: startedAt,
-            expiresAt: expiresAt
+            expiresAt: expiresAt,
+            ended: ended
         });
     }
 
     function donate(string calldata message) external payable {
-        require(msg.sender != target);
-        require(donations[msg.sender].createdAt == 0);
-        require(block.timestamp < expiresAt);
+        require(msg.sender != target, "CF: wrong address");
+        require(donations[msg.sender].createdAt == 0, "CF: already donated");
+        require(expiresAt != 0, "CF: not started");
+        require(block.timestamp < expiresAt, "CF: expired");
+        require(msg.value > 0, "CF: value is 0");
 
-        uint balance = address(this).balance;
-        require(balance < targetAmount);
+        require(currentAmount < targetAmount, "CF: amount is collected");
 
-        uint rebate = balance - targetAmount;
+        uint amount = msg.value;
+        currentAmount += amount;
 
-        if (rebate > 0) {
+        if (currentAmount > targetAmount) {
+            uint rebate = currentAmount - targetAmount;
+            amount -= rebate;
+            currentAmount -= rebate;
             payable (msg.sender).transfer(rebate);
+        }
+
+        if (currentAmount == targetAmount) {
+            ended = true;
         }
 
         donations[msg.sender] = Donation({
             message: message,
-            amount: msg.value,
+            amount: amount,
             createdAt: block.timestamp
         });
 
-        emit NewDonation(message, msg.value);
+        emit NewDonation(message, amount);
     }
 
     function getDonation() external view returns(Donation memory) {
@@ -72,22 +85,22 @@ contract Crowdfunding is ICrowdfunding {
     }
 
     function withdraw() external {
-        uint amount = 0;
-        uint balance = address(this).balance;
+        uint amount;
 
         if (msg.sender == target) {
-            require(balance == targetAmount);
+            require(ended, "CF: amount isn't collected");
 
-            amount = balance;
+            amount = currentAmount;
         } else {
-            require(balance < targetAmount);
-            require(block.timestamp >= expiresAt);
-            require(donations[msg.sender].createdAt > 0);
+            require(!ended, "CF: amount is collected");
+            require(block.timestamp >= expiresAt, "CF: contract isn't expired");
+            require(donations[msg.sender].createdAt > 0, "CF: donation not found");
 
             amount = donations[msg.sender].amount;
         }
 
         if (amount > 0) {
+            currentAmount -= amount;
             payable(msg.sender).transfer(amount);
         }
     }
