@@ -5,6 +5,7 @@ import "./ICrowdfunding.sol";
 
 contract Crowdfunding is ICrowdfunding {
     address owner;
+    string name;
     string description;
     uint currentAmount;
     uint targetAmount;
@@ -16,17 +17,18 @@ contract Crowdfunding is ICrowdfunding {
 
     event NewDonation(string message, uint amount);
 
-    constructor(string memory _description, uint _targetAmount, address _target) {
+    constructor(string memory _name, string memory _description, uint _targetAmount, address _target) {
         require(_targetAmount > 0);
         require(_target != address(0));
 
         owner = msg.sender;
+        name = _name;
         description = _description;
         targetAmount = _targetAmount;
         target = _target;
     }
 
-    function start(uint _expiresIn) external {
+    function start(uint _expiresIn) external override {
         require(msg.sender == owner, "CF: wrong address");
         require(_expiresIn > 0, "CF: wrong duration");
         require(expiresAt == 0, "CF: already started");
@@ -35,9 +37,10 @@ contract Crowdfunding is ICrowdfunding {
         expiresAt = startedAt + _expiresIn;
     }
 
-    function getInfo() external view returns(Info memory) {
-        return Info({
+    function getInfo() external view override returns(CrowdfundingInfo memory) {
+        return CrowdfundingInfo({
             owner: owner,
+            name: name,
             description: description,
             currentAmount: currentAmount,
             targetAmount: targetAmount,
@@ -48,7 +51,7 @@ contract Crowdfunding is ICrowdfunding {
         });
     }
 
-    function donate(string calldata message) external payable {
+    function donate(string calldata message) external payable override {
         require(msg.sender != target, "CF: wrong address");
         require(donations[msg.sender].createdAt == 0, "CF: already donated");
         require(expiresAt != 0, "CF: not started");
@@ -80,11 +83,11 @@ contract Crowdfunding is ICrowdfunding {
         emit NewDonation(message, amount);
     }
 
-    function getDonation() external view returns(Donation memory) {
+    function getDonation() external view override returns(Donation memory) {
         return donations[msg.sender];
     }
 
-    function withdraw() external {
+    function withdraw() external override {
         uint amount;
 
         if (msg.sender == target) {

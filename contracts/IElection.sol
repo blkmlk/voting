@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-struct Info {
+struct ElectionInfo {
     bool started;
     address owner;
     string name;
@@ -26,7 +26,7 @@ struct Vote {
 
 interface IElection {
     function start(uint) external returns(bool);
-    function getInfo() external view returns(Info memory);
+    function getInfo() external view returns(ElectionInfo memory);
     function addCandidates(Candidate[] calldata) external returns(uint);
     function vote(uint) external returns(bool);
     function getVote() external view returns(Vote memory);

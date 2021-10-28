@@ -1,7 +1,7 @@
 <template>
   <v-container>
     <v-row justify="center">
-      <v-data-table no-data-text="" height="500" :headers="headers" :items="getElections" @click:row="goToElection">
+      <v-data-table no-data-text="" height="500" :headers="headers" :items="getCrowdfundingItems" @click:row="goToElection">
         <template v-slot:top>
           <v-toolbar flat>
             <v-toolbar-title>Crowdfunding</v-toolbar-title>
@@ -20,7 +20,10 @@
                   <v-container>
                     <v-row>
                       <v-col cols="12">
-                        <v-text-field v-model="newElectionName" label="Name"></v-text-field>
+                        <v-text-field v-model="newCrowdfunding.name" label="Name"></v-text-field>
+                        <v-text-field v-model="newCrowdfunding.description" label="Description"></v-text-field>
+                        <v-text-field v-model="newCrowdfunding.targetAmount" label="Target Amount"></v-text-field>
+                        <v-text-field v-model="newCrowdfunding.targetAddress" label="Target Address"></v-text-field>
                       </v-col>
                     </v-row>
                   </v-container>
@@ -42,7 +45,7 @@
 <script>
 import Contract from "web3-eth-contract";
 import Factory from '@/contracts/Factory.json'
-import IElection from '@/contracts/IElection.json'
+import ICrowdfunding from '@/contracts/ICrowdfunding.json'
 
 export default {
   name: "Factory",
@@ -51,15 +54,21 @@ export default {
       headers: [
         {text: "Name", value: "name"},
         {text: "Owner", value: "owner"},
-        {text: "Candidates", value: "candidates"},
-        {text: "Votes", value: "votes"},
+        {text: "Target", value: "target_amount"},
+        {text: "Collected", value: "current_amount"},
+        {text: "To", value: "address"},
         {text: "Expires At", value: "expires"}
       ],
       newDialog: false,
-      newElectionName: "",
+      newCrowdfunding: {
+        name: "",
+        description: "",
+        targetAmount: 0,
+        targetAddress: "",
+      },
       factory: null,
-      elections: [],
-      electionInfo:[],
+      crowdfundingList: [],
+      crowdfundingInfo:[],
     }
   },
   created() {
@@ -80,25 +89,38 @@ export default {
     networkId() {
       return this.$store.state.networkId;
     },
-    getElections() {
-      let elections = [];
-      for (let i = 0; i < this.electionInfo.length; i++) {
-        elections.push({
+    getCrowdfundingItems() {
+      let items = [];
+      for (let i = 0; i < this.crowdfundingInfo.length; i++) {
+        items.push({
           id: i,
-          name: this.electionInfo[i].name,
-          owner: this.electionInfo[i].owner,
-          candidates: this.electionInfo[i].candidates.length,
-          votes: this.electionInfo[i].votes,
-          expires: this.getExpiration(this.electionInfo[i].expiresAt),
+          name: this.crowdfundingInfo[i].name,
+          owner: this.crowdfundingInfo[i].owner,
+          target_amount: this.crowdfundingInfo[i].targetAmount,
+          current_amount: this.crowdfundingInfo[i].currentAmount,
+          address: this.crowdfundingInfo[i].target,
+          expires: this.getExpiration(this.crowdfundingInfo[i].expiresAt),
         })
       }
 
-      return elections;
+      return items;
     },
   },
   methods: {
     create() {
-      if (this.newElectionName.length === 0) {
+      if (this.newCrowdfunding.name.length === 0) {
+        return;
+      }
+
+      if (this.newCrowdfunding.description.length === 0) {
+        return;
+      }
+
+      if (this.newCrowdfunding.targetAmount <= 0) {
+        return;
+      }
+
+      if (this.newCrowdfunding.targetAddress.length === 0) {
         return;
       }
 
@@ -106,18 +128,26 @@ export default {
         return;
       }
 
-      this.factory.methods.createElection(this.newElectionName).send({from: this.account}).on('receipt', function () {
-        this.newElectionName = "";
+      this.factory.methods.createCrowdfunding(
+          this.newCrowdfunding.name,
+          this.newCrowdfunding.description,
+          this.newCrowdfunding.targetAmount,
+          this.newCrowdfunding.targetAddress
+      ).send({from: this.account}).on('receipt', function () {
+        this.newCrowdfunding = {
+          name: "",
+          description: "",
+          targetAmount: 0,
+          targetAddress: "",
+        }
         this.newDialog = false;
       }.bind(this))
-
-      return;
     },
     closeNewDialog() {
       this.newDialog = false;
     },
     goToElection(value) {
-      this.$router.push("/election/" + this.getAddress(value.id))
+      this.$router.push("/crowdfunding/" + this.getAddress(value.id))
     },
     getExpiration(expiresAt) {
       if (parseInt(expiresAt) === 0) {
@@ -133,7 +163,7 @@ export default {
       return (new Date(expiresAt * 1000)).toString();
     },
     getAddress(idx) {
-      return this.elections[idx]['_address'];
+      return this.crowdfundingList[idx]['_address'];
     },
     loadContract() {
       try {
@@ -146,10 +176,10 @@ export default {
     }
   },
   watch: {
-    async elections(elections) {
+    async crowdfundingList(items) {
       let promises = [];
-      for (let i = 0; i < elections.length; i++) {
-        let e = elections[i];
+      for (let i = 0; i < items.length; i++) {
+        let e = items[i];
         promises.push(async function() {
           let info = await e.methods.getInfo().call();
           return {
@@ -165,22 +195,22 @@ export default {
           newInfo[r.id] = r.info;
         }
       })
-      this.electionInfo = newInfo;
+      this.crowdfundingInfo = newInfo;
     },
     factory(factory) {
       if (factory === null) {
         return;
       }
 
-      factory.methods.getElections().call({from: this.account}).then(function (elections) {
+      factory.methods.getCrowdfunding().call({from: this.account}).then(function (items) {
         let contracts = [];
-        for (const e of elections) {
-          let contract = new Contract(IElection.abi, e);
+        for (const c of items) {
+          let contract = new Contract(ICrowdfunding.abi, c);
           contract.setProvider(this.$store.state.web3.currentProvider);
           contracts.push(contract);
         }
 
-        this.elections = contracts;
+        this.crowdfundingList = contracts;
       }.bind(this))
 
     },

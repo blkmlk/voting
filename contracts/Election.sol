@@ -33,7 +33,7 @@ contract Election is IElection {
     }
 
     // @override
-    function getInfo() external override view returns(Info memory) {
+    function getInfo() external override view returns(ElectionInfo memory) {
         Candidate[] memory tmp = candidates;
 
         uint totalVotes = 0;
@@ -44,7 +44,7 @@ contract Election is IElection {
             }
         }
 
-        return Info({
+        return ElectionInfo({
             started: started,
             owner: owner,
             name: name,
