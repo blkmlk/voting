@@ -17,11 +17,12 @@ contract Crowdfunding is ICrowdfunding {
 
     event NewDonation(string message, uint amount);
 
-    constructor(string memory _name, string memory _description, uint _targetAmount, address _target) {
+    constructor(address _owner, string memory _name, string memory _description, uint _targetAmount, address _target) {
+        require(_owner != address(0));
         require(_targetAmount > 0);
         require(_target != address(0));
 
-        owner = msg.sender;
+        owner = _owner;
         name = _name;
         description = _description;
         targetAmount = _targetAmount;

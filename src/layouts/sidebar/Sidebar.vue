@@ -60,32 +60,14 @@ export default {
       {
         title: "Elections",
         icon: "mdi-vote",
-        to: "/factory"
+        to: "/election"
       },
 
       {
         title: "Crowdfunding",
         icon: "mdi-hand-coin-outline",
-        to: "/pages/crowdfunding"
+        to: "/crowdfunding"
       },
-      //
-      // {
-      //   title: "Alerts",
-      //   icon: "mdi-alert",
-      //   to: "/pages/alerts"
-      // },
-      //
-      // {
-      //   title: "Icons",
-      //   icon: "mdi-emoticon",
-      //   to: "/pages/icons"
-      // },
-      //
-      // {
-      //   title: "Basic Table",
-      //   icon: "mdi-table-column-width",
-      //   to: "/pages/tables-simple"
-      // }
     ]
   }),
   computed: {

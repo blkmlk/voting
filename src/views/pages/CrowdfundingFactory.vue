@@ -1,7 +1,7 @@
 <template>
   <v-container>
     <v-row justify="center">
-      <v-data-table no-data-text="" height="500" :headers="headers" :items="getCrowdfundingItems" @click:row="goToElection">
+      <v-data-table no-data-text="" height="500" :headers="headers" :items="getCrowdfundingItems" @click:row="goToCrowdfunding">
         <template v-slot:top>
           <v-toolbar flat>
             <v-toolbar-title>Crowdfunding</v-toolbar-title>
@@ -64,7 +64,7 @@ export default {
         name: "",
         description: "",
         targetAmount: 0,
-        targetAddress: "",
+        targetAddress: "0x879CC2bf498892D5deDb75C591625bAdc9499Df9",
       },
       factory: null,
       crowdfundingList: [],
@@ -96,8 +96,8 @@ export default {
           id: i,
           name: this.crowdfundingInfo[i].name,
           owner: this.crowdfundingInfo[i].owner,
-          target_amount: this.crowdfundingInfo[i].targetAmount,
-          current_amount: this.crowdfundingInfo[i].currentAmount,
+          target_amount: this.web3.utils.fromWei(this.crowdfundingInfo[i].targetAmount, 'ether'),
+          current_amount: this.web3.utils.fromWei(this.crowdfundingInfo[i].currentAmount, 'ether'),
           address: this.crowdfundingInfo[i].target,
           expires: this.getExpiration(this.crowdfundingInfo[i].expiresAt),
         })
@@ -105,6 +105,9 @@ export default {
 
       return items;
     },
+    web3() {
+      return this.$store.state.web3;
+    }
   },
   methods: {
     create() {
@@ -128,10 +131,12 @@ export default {
         return;
       }
 
+      let targetAmount = this.web3.utils.toWei(this.newCrowdfunding.targetAmount, 'ether');
+
       this.factory.methods.createCrowdfunding(
           this.newCrowdfunding.name,
           this.newCrowdfunding.description,
-          this.newCrowdfunding.targetAmount,
+          targetAmount,
           this.newCrowdfunding.targetAddress
       ).send({from: this.account}).on('receipt', function () {
         this.newCrowdfunding = {
@@ -146,7 +151,7 @@ export default {
     closeNewDialog() {
       this.newDialog = false;
     },
-    goToElection(value) {
+    goToCrowdfunding(value) {
       this.$router.push("/crowdfunding/" + this.getAddress(value.id))
     },
     getExpiration(expiresAt) {

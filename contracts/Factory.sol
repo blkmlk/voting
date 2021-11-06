@@ -18,7 +18,7 @@ contract Factory {
     }
 
     function createCrowdfunding(string calldata _name, string calldata _description, uint _targetAmount, address target) external{
-        crowdfunding.push(new Crowdfunding(_name, _description, _targetAmount, target));
+        crowdfunding.push(new Crowdfunding(msg.sender, _name, _description, _targetAmount, target));
     }
 
     function getElections() public view returns (IElection[] memory) {

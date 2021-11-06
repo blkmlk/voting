@@ -9,48 +9,29 @@ let router = new Router({
     routes: [
         {
             path: '/',
-            redirect: 'dashboard/basic-dashboard',
+            redirect: 'election',
             component: () => import('@/layouts/Layout'),
             children: [
                 // Components
                 {
-                    name: 'Alerts',
-                    path: 'pages/alerts',
-                    component: () => import('@/views/pages/Alerts'),
-                },
-
-                {
-                    name: 'Crowdfunding',
-                    path: 'pages/crowdfunding',
-                    component: () => import('@/views/pages/CrowdfundingFactory'),
-                },
-
-                {
-                    name: 'Icons',
-                    path: 'pages/icons',
-                    component: () => import('@/views/pages/Icons'),
-                },
-
-                {
-                    name: 'TableSimple',
-                    path: 'pages/tables-simple',
-                    component: () => import('@/views/pages/TableSimple'),
-                },
-
-                {
-                    name: 'Dashboard',
-                    path: 'dashboard/basic-dashboard',
-                    component: () => import('@/views/dashboard/BasicDashboard'),
-                },
-                {
-                    name: 'Factory',
-                    path: 'factory',
+                    name: 'Elections',
+                    path: 'election',
                     component: () => import('@/views/pages/ElectionFactory'),
                 },
                 {
                     name: 'Election',
                     path: 'election/:address',
                     component: () => import('@/views/pages/Election'),
+                },
+                {
+                    name: 'Crowdfunding Factory',
+                    path: 'crowdfunding',
+                    component: () => import('@/views/pages/CrowdfundingFactory'),
+                },
+                {
+                    name: 'Crowdfunding',
+                    path: 'crowdfunding/:address',
+                    component: () => import('@/views/pages/Crowdfunding'),
                 }
             ]
         },

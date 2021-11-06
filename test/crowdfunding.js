@@ -68,6 +68,9 @@ contract("crowdfunding", function (accounts) {
     await contract.donate("test", {from: accounts[0], value: value}).catch(exp => {
       assert.isTrue(false, exp.toString());
     })
+
+    let info = await contract.getInfo.call();
+    assert.equal(web3.utils.toWei("0.1", "ether"), info.currentAmount);
   })
 
   it("should reject donation: wrong address", async function () {
