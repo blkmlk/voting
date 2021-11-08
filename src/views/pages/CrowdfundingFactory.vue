@@ -208,6 +208,10 @@ export default {
       }
 
       factory.methods.getCrowdfunding().call({from: this.account}).then(function (items) {
+        if (items === null) {
+          return
+        }
+
         let contracts = [];
         for (const c of items) {
           let contract = new Contract(ICrowdfunding.abi, c);

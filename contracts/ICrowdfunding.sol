@@ -11,6 +11,7 @@ struct CrowdfundingInfo {
     uint startedAt;
     uint expiresAt;
     bool ended;
+    bool withdrawn;
 }
 
 struct Donation {

@@ -14,6 +14,7 @@ contract Crowdfunding is ICrowdfunding {
     uint startedAt;
     uint expiresAt;
     bool ended;
+    bool withdrawn;
 
     event NewDonation(string message, uint amount);
 
@@ -48,7 +49,8 @@ contract Crowdfunding is ICrowdfunding {
             target: target,
             startedAt: startedAt,
             expiresAt: expiresAt,
-            ended: ended
+            ended: ended,
+            withdrawn: withdrawn
         });
     }
 
@@ -93,18 +95,20 @@ contract Crowdfunding is ICrowdfunding {
 
         if (msg.sender == target) {
             require(ended, "CF: amount isn't collected");
+            require(!withdrawn, "CF: amount is already withdrawn");
 
             amount = currentAmount;
+            withdrawn = true;
         } else {
             require(!ended, "CF: amount is collected");
             require(block.timestamp >= expiresAt, "CF: contract isn't expired");
             require(donations[msg.sender].createdAt > 0, "CF: donation not found");
 
             amount = donations[msg.sender].amount;
+            delete donations[msg.sender];
         }
 
         if (amount > 0) {
-            currentAmount -= amount;
             payable(msg.sender).transfer(amount);
         }
     }

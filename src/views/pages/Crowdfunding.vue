@@ -18,10 +18,9 @@
           {{contractState}}
         </v-toolbar-title>
       <v-spacer></v-spacer>
-      <div v-if="canEdit">
-        <v-dialog v-model="startDialog" max-width="500px">
+        <v-dialog v-if="canStart" v-model="startDialog" max-width="500px">
             <template v-slot:activator="{on,attrs}">
-              <v-btn v-if="canStart" color="red" v-bind="attrs" v-on="on">Start</v-btn>
+              <v-btn color="red" v-bind="attrs" v-on="on">Start</v-btn>
             </template>
             <v-card>
               <v-card-title>
@@ -47,7 +46,6 @@
               </v-card-actions>
             </v-card>
           </v-dialog>
-        </div>
     </v-app-bar>
     <v-row justify="center">
       <v-card style="width:500px">
@@ -63,20 +61,38 @@
             </v-row>
           </v-container>
         </v-card-text>
-        <div class="pa-5">
-          <v-progress-linear color="blue" class="mt-6" elevation="2" :value="amountRation" height="15">
+        <div class="pr-5 pl-5">
+          <v-progress-linear color="blue" class="mt-6" elevation="2" :value="amountRatio" height="20">
             <template v-slot:default="{ value }">
-              <strong>{{ Math.round(value * 100) / 100 }}%</strong>
+              {{ Math.round(value * 100) / 100 }}%
             </template>
           </v-progress-linear>
-          <v-row justify="end">
-            <v-col class="col-3">
-              <v-text-field type="number" placeholder="Amount" v-model="newAmount"></v-text-field>
-            </v-col>
-            <v-col class="col-3">
-              <v-btn class="mt-5" color="green" :disabled="!canDonate" @click="donate">Donate</v-btn>
-            </v-col>
-          </v-row>
+          <v-container>
+              <div class="d-flex justify-end">
+                {{currentAmount}}
+                /
+                {{targetAmount}}
+                <v-icon class="mb-1" size="20" color="black" dark>mdi-ethereum</v-icon>
+              </div>
+          </v-container>
+          <v-container>
+            <div v-if="canDonate" class="d-flex justify-end">
+              <v-col class="col-3">
+                <v-text-field type="number" placeholder="Amount" v-model="newAmount"></v-text-field>
+              </v-col>
+              <v-col class="col-3">
+                <v-btn class="mt-5" color="green" :disabled="!canDonate" @click="donate">Donate</v-btn>
+              </v-col>
+            </div>
+            <v-row v-else-if="canWithdraw" class="d-flex justify-end mr-3">
+              <v-col v-if="!isTarget" class="col-3">
+                <v-text-field disabled :value="currentDonationAmount"></v-text-field>
+              </v-col>
+              <v-col class="col-3">
+                <v-btn class="mt-5" color="blue" @click="withdraw">Withdraw</v-btn>
+              </v-col>
+            </v-row>
+          </v-container>
         </div>
       </v-card>
       <v-icon class="ml-15 mr-15" color="green" size="100" dark> mdi-arrow-right-bold-outline </v-icon>
@@ -104,7 +120,7 @@
 import ICrowdfunding from '@/contracts/ICrowdfunding.json';
 import Contract from 'web3-eth-contract';
 import {AvatarGenerator} from 'random-avatar-generator';
-import {getAvatar} from "../../helpers";
+import {getAvatar, getRemainingTime} from "../../helpers";
 
 export default {
   created() {
@@ -134,6 +150,7 @@ export default {
       address: "",
       contract: null,
       contractInfo: {},
+      donation: {},
       contractOwner: null,
       contractExpiresAt: 0,
       contractRemainingTime: "",
@@ -145,39 +162,65 @@ export default {
     }
   },
   computed: {
-    amountRation() {
-      if (this.contractInfo.started === 0) {
+    targetAmount() {
+      if (this.contractInfo.targetAmount === undefined) {
+        return "0";
+      }
+
+      return this.web3.utils.fromWei(this.contractInfo.targetAmount, 'ether');
+    },
+    currentAmount() {
+      if (this.contractInfo.currentAmount === undefined) {
+        return "0";
+      }
+
+      return this.web3.utils.fromWei(this.contractInfo.currentAmount, 'ether');
+    },
+    amountRatio() {
+      if (this.contractInfo.startedAt === 0) {
         return;
       }
 
       return (this.contractInfo.currentAmount / this.contractInfo.targetAmount) * 100;
     },
+    currentDonationAmount() {
+      if (this.donation.amount === undefined) {
+        return "0";
+      }
+
+      return this.web3.utils.fromWei(this.donation.amount, 'ether');
+    },
+    isTarget() {
+      return this.contractInfo.target === this.account;
+    },
+    canWithdraw() {
+      if (this.isTarget) {
+        return this.contractInfo.ended && this.contractInfo.startedAt > 0 && !this.contractInfo.withdrawn;
+      }
+
+      return this.contractExpired && this.donation.createdAt > 0;
+    },
     canGoBack() {
       return window.prevUrl !== "/";
     },
     canStart() {
-      return parseInt(this.contractInfo.startedAt) === 0;
+      return parseInt(this.contractInfo.startedAt) === 0 &&
+          !this.contractInfo.ended &&
+          this.contractInfo.owner === this.account;
     },
     canDonate() {
-      return parseInt(this.newAmount) > 0;
-    },
-    canEdit() {
-      if (this.contractInfo === null) {
-        return false;
-      }
-
-      if (this.contractInfo.started) {
-        return false;
-      }
-
-      return this.contractInfo.owner === this.account && this.account.length > 0;
+      return parseInt(this.contractInfo.startedAt) > 0 &&
+          !this.contractInfo.ended &&
+          !this.contractExpired &&
+          this.contractInfo.target !== this.account &&
+          parseInt(this.donation.createdAt) === 0;
     },
     contractState() {
       if (this.contractInfo === null) {
         return "";
       }
 
-      if (!this.contractInfo.started) {
+      if (this.contractInfo.startedAt === "0") {
         return "not started";
       }
 
@@ -245,6 +288,11 @@ export default {
       let value = this.web3.utils.toWei(amount.toString(), 'ether');
       this.contract.methods.donate("donate").send({from: this.account, value: value});
     },
+    withdraw() {
+      this.contract.methods.withdraw().send({from: this.account}).on('receipt', function () {
+        this.loadContractInfo(this.contract)
+      }.bind(this));
+    },
     closeStartDialog() {
       this.startDialog = false;
     },
@@ -263,13 +311,9 @@ export default {
         this.contractExpiresAt = parseInt(info.expiresAt);
         console.log(info);
       }.bind(this))
-    },
-    getRemainingTime(expiresAt, now) {
-      let secondsLeft = expiresAt - now;
-      let hours = Math.floor(secondsLeft/(60*60));
-      let minutes = Math.floor(secondsLeft/60) - hours*60;
-      let seconds = secondsLeft % 60;
-      return this.zeroPad(hours, 2) + ":" + this.zeroPad(minutes, 2) + ":" + this.zeroPad(seconds, 2);
+      instance.methods.getDonation().call({from: this.account}).then(function (donation) {
+        this.donation = donation;
+      }.bind(this))
     },
     checkContract() {
       try {
@@ -288,7 +332,7 @@ export default {
         return;
       }
 
-      this.contractRemainingTime = this.getRemainingTime(this.contractExpiresAt, value);
+      this.contractRemainingTime = getRemainingTime(this.contractInfo.expiresAt, value);
     },
     newBlock() {
       this.loadContractInfo(this.contract);
