@@ -24,7 +24,7 @@
             </template>
             <v-card>
               <v-card-title>
-                <span class="text-h5">Set Election Duration</span>
+                <span class="text-h5">Set Crowdfunding Duration</span>
               </v-card-title>
               <v-card-text>
                 <v-container>
@@ -42,7 +42,7 @@
               <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn color="blue darken-1" text @click="start"> Start </v-btn>
-                <v-btn color="blue darken-1" text @click="closeStartDialog"> Cancel </v-btn>
+                <v-btn color="blue darken-1" text @click="startDialog = false"> Cancel </v-btn>
               </v-card-actions>
             </v-card>
           </v-dialog>
@@ -78,10 +78,38 @@
           <v-container>
             <div v-if="canDonate" class="d-flex justify-end">
               <v-col class="col-3">
-                <v-text-field type="number" placeholder="Amount" v-model="newAmount"></v-text-field>
-              </v-col>
-              <v-col class="col-3">
-                <v-btn class="mt-5" color="green" :disabled="!canDonate" @click="donate">Donate</v-btn>
+                <v-dialog v-model="donationDialog" max-width="500px">
+                  <template v-slot:activator="{on,attrs}">
+                    <v-btn class="mt-5" color="green" @click="donationDialog = true">Donate</v-btn>
+                  </template>
+                  <v-card>
+                    <v-card-title>
+                      <span class="text-h5">Donate</span>
+                    </v-card-title>
+                    <v-card-text>
+                      <v-container>
+                        <v-row>
+                          <v-col cols="12">
+                            <v-subheader class="pl-0">
+                              Message
+                            </v-subheader>
+                            <v-text-field v-model="newDonation.message"></v-text-field>
+                            <v-subheader class="pl-0">
+                              Amount
+                            </v-subheader>
+                            <v-text-field type="number" v-model="newDonation.amount"></v-text-field>
+                          </v-col>
+                        </v-row>
+                      </v-container>
+                    </v-card-text>
+
+                    <v-card-actions>
+                      <v-spacer></v-spacer>
+                      <v-btn color="blue darken-1" text @click="donate"> Donate </v-btn>
+                      <v-btn color="blue darken-1" text @click="donationDialog = false"> Cancel </v-btn>
+                    </v-card-actions>
+                  </v-card>
+                </v-dialog>
               </v-col>
             </div>
             <v-row v-else-if="canWithdraw" class="d-flex justify-end mr-3">
@@ -146,17 +174,18 @@ export default {
       name: "",
       inputMinutes: 10,
       startDialog: false,
-      addDialog: false,
+      donationDialog: false,
       address: "",
       contract: null,
       contractInfo: {},
       donation: {},
-      contractOwner: null,
       contractExpiresAt: 0,
       contractRemainingTime: "",
-      newAmount: 0,
+      newDonation: {
+        message: "",
+        amount: 0,
+      },
       generator: null,
-      editMode: false,
       currentTimestamp: 0,
       timeInterval: null,
     }
@@ -198,7 +227,7 @@ export default {
         return this.contractInfo.ended && this.contractInfo.startedAt > 0 && !this.contractInfo.withdrawn;
       }
 
-      return this.contractExpired && this.donation.createdAt > 0;
+      return !this.contractInfo.ended && this.contractExpired && this.donation.createdAt > 0;
     },
     canGoBack() {
       return window.prevUrl !== "/";
@@ -269,11 +298,11 @@ export default {
     },
     start() {
       this.contract.methods.start(this.inputMinutes*60).send({from: this.account}).on('receipt', function () {
-        this.closeStartDialog();
+        this.startDialog = false;
       }.bind(this))
     },
     donate() {
-      let amount = parseFloat(this.newAmount);
+      let amount = parseFloat(this.newDonation.amount);
 
       if (amount <= 0) {
         return;
@@ -283,31 +312,29 @@ export default {
         amount = this.contractInfo.targetAmount;
       }
 
-      this.newAmount = amount;
+      this.newDonation = {
+        message: "",
+        amount: 0,
+      }
 
       let value = this.web3.utils.toWei(amount.toString(), 'ether');
-      this.contract.methods.donate("donate").send({from: this.account, value: value});
+      this.contract.methods.
+        donate(this.newDonation.message).
+        send({from: this.account, value: value}).
+        on('receipt', function() {
+          this.donationDialog = false;
+      }.bind(this));
     },
     withdraw() {
       this.contract.methods.withdraw().send({from: this.account}).on('receipt', function () {
         this.loadContractInfo(this.contract)
       }.bind(this));
     },
-    closeStartDialog() {
-      this.startDialog = false;
-    },
-    closeAddDialog() {
-      this.addDialog = false;
-    },
-    zeroPad (num, places) {
-      return String(num).padStart(places, '0');
-    },
     loadContractInfo(instance) {
       instance.methods.getInfo().call({from: this.account}).then(function(info){
         this.contractInfo = info;
         this.name = info.name;
 
-        this.contractOwner = info.owner;
         this.contractExpiresAt = parseInt(info.expiresAt);
         console.log(info);
       }.bind(this))
