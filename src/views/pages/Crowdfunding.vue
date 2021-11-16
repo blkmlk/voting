@@ -80,7 +80,7 @@
               <v-col class="col-3">
                 <v-dialog v-model="donationDialog" max-width="500px">
                   <template v-slot:activator="{on,attrs}">
-                    <v-btn class="mt-5" color="green" @click="donationDialog = true">Donate</v-btn>
+                    <v-btn color="green" @click="donationDialog = true">Donate</v-btn>
                   </template>
                   <v-card>
                     <v-card-title>
@@ -123,7 +123,7 @@
           </v-container>
         </div>
       </v-card>
-      <v-icon class="ml-15 mr-15" color="green" size="100" dark> mdi-arrow-right-bold-outline </v-icon>
+      <v-icon class="ml-15 mr-15" color="blue" size="100" dark> mdi-arrow-right-bold-outline </v-icon>
       <v-card>
         <v-container>
           <v-row justify="center" class="mb-10">
@@ -255,6 +255,10 @@ export default {
 
       if (this.contractExpired) {
         return "expired";
+      }
+
+      if (this.contractInfo.ended) {
+        return "ended";
       }
 
       return "expires in " + this.contractRemainingTime;

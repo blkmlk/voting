@@ -12,18 +12,15 @@
     id="main-sidebar"
   >
     <v-list dense nav>
-      <!---USer Area -->
       <v-list-item two-line class="px-0">
         <v-list-item-avatar>
-          <v-icon dark color="#212121"> mdi-ethereum </v-icon>
+          <v-icon class="mb-1 ml-5" size="35" dark color="#212121"> mdi-ethereum </v-icon>
         </v-list-item-avatar>
 
         <v-list-item-content>
-          <v-list-item-title>Blockchain Based</v-list-item-title>
+          <v-list-item-title>Blockchain Elections</v-list-item-title>
         </v-list-item-content>
       </v-list-item>
-      <!---USer Area -->
-      <!---Sidebar Items -->
       <v-list-item
         v-for="item in items"
         :key="item.title"
@@ -39,7 +36,6 @@
           <v-list-item-title>{{ item.title }}</v-list-item-title>
         </v-list-item-content>
       </v-list-item>
-      <!---Sidebar Items -->
     </v-list>
   </v-navigation-drawer>
 </template>
