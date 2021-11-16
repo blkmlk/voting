@@ -48,7 +48,7 @@
           </v-dialog>
     </v-app-bar>
     <v-row justify="center">
-      <v-card style="width:500px">
+      <v-card class="top-card">
         <v-card-title class="justify-center">
           <span class="text-h5 mt-2">{{contractInfo.name}}</span>
         </v-card-title>
@@ -124,7 +124,7 @@
         </div>
       </v-card>
       <v-icon class="ml-15 mr-15" color="blue" size="100" dark> mdi-arrow-right-bold-outline </v-icon>
-      <v-card>
+      <v-card class="top-card">
         <v-container>
           <v-row justify="center" class="mb-10">
             <img
@@ -140,6 +140,27 @@
         </v-container>
         </v-card>
     </v-row>
+  <v-row class="d-flex justify-center mt-10">
+          <v-card class="log-card">
+            <v-card-title>
+              Payments
+            </v-card-title>
+            <v-timeline dense>
+              <v-timeline-item
+                  small
+                  color="blue"
+                  icon="mbi-buffer"
+              >
+                <v-card color="blue lighten-4" class="elevation-2 log-item-card">
+                  <v-card-text>
+                    Amount
+                    0.003
+                  </v-card-text>
+                </v-card>
+              </v-timeline-item>
+            </v-timeline>
+          </v-card>
+  </v-row>
 </v-container>
 </template>
 
@@ -384,8 +405,13 @@ export default {
 </script>
 
 <style>
-.card {
-  height: 290px;
+.top-card {
+  width: 580px;
+}
+.log-card {
+  width: 400px;
+}
+.log-item-card {
   width: 250px;
 }
 </style>
