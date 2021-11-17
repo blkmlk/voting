@@ -8,6 +8,7 @@ struct CrowdfundingInfo {
     uint currentAmount;
     uint targetAmount;
     address target;
+    uint startBlock;
     uint startedAt;
     uint expiresAt;
     bool ended;

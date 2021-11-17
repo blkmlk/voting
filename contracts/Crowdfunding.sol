@@ -11,6 +11,7 @@ contract Crowdfunding is ICrowdfunding {
     uint targetAmount;
     address target;
     mapping(address => Donation) donations;
+    uint startBlock;
     uint startedAt;
     uint expiresAt;
     bool ended;
@@ -35,6 +36,7 @@ contract Crowdfunding is ICrowdfunding {
         require(_expiresIn > 0, "CF: wrong duration");
         require(expiresAt == 0, "CF: already started");
 
+        startBlock = block.number;
         startedAt = block.timestamp;
         expiresAt = startedAt + _expiresIn;
     }
@@ -47,6 +49,7 @@ contract Crowdfunding is ICrowdfunding {
             currentAmount: currentAmount,
             targetAmount: targetAmount,
             target: target,
+            startBlock: startBlock,
             startedAt: startedAt,
             expiresAt: expiresAt,
             ended: ended,

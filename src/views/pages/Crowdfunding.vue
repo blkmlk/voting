@@ -147,14 +147,16 @@
             </v-card-title>
             <v-timeline dense>
               <v-timeline-item
+                  v-for="donation in donations"
                   small
                   color="blue"
                   icon="mbi-buffer"
               >
                 <v-card color="blue lighten-4" class="elevation-2 log-item-card">
                   <v-card-text>
-                    Amount
-                    0.003
+                    {{donation.message}}
+                    ({{donation.amount}}
+                    <v-icon class="mb-1" size="20" color="black" dark>mdi-ethereum</v-icon>)
                   </v-card-text>
                 </v-card>
               </v-timeline-item>
@@ -166,7 +168,7 @@
 
 <script>
 
-import ICrowdfunding from '@/contracts/ICrowdfunding.json';
+import Crowdfunding from '@/contracts/Crowdfunding.json';
 import Contract from 'web3-eth-contract';
 import {AvatarGenerator} from 'random-avatar-generator';
 import {getAvatar, getRemainingTime} from "../../helpers";
@@ -206,6 +208,7 @@ export default {
         message: "",
         amount: 0,
       },
+      donations: [],
       generator: null,
       currentTimestamp: 0,
       timeInterval: null,
@@ -337,11 +340,6 @@ export default {
         amount = this.contractInfo.targetAmount;
       }
 
-      this.newDonation = {
-        message: "",
-        amount: 0,
-      }
-
       let value = this.web3.utils.toWei(amount.toString(), 'ether');
       this.contract.methods.
         donate(this.newDonation.message).
@@ -349,6 +347,11 @@ export default {
         on('receipt', function() {
           this.donationDialog = false;
       }.bind(this));
+
+      this.newDonation = {
+        message: "",
+        amount: 0,
+      }
     },
     withdraw() {
       this.contract.methods.withdraw().send({from: this.account}).on('receipt', function () {
@@ -362,6 +365,8 @@ export default {
 
         this.contractExpiresAt = parseInt(info.expiresAt);
         console.log(info);
+
+        this.readLogs();
       }.bind(this))
       instance.methods.getDonation().call({from: this.account}).then(function (donation) {
         this.donation = donation;
@@ -369,12 +374,27 @@ export default {
     },
     checkContract() {
       try {
-        let contract = new Contract(ICrowdfunding.abi, this.address);
+        let contract = new Contract(Crowdfunding.abi, this.address);
         contract.setProvider(this.$store.state.web3.currentProvider);
         this.contract = contract;
       } catch(e) {
         console.log(e);
       }
+    },
+    readLogs() {
+      this.contract.getPastEvents("NewDonation", {
+        fromBlock: this.contractInfo.startBlock,
+        toBlock: 'latest',
+      }).then(function (events) {
+        let donations = [];
+        events.map(event => {
+          donations.push({
+            message: event.returnValues.message,
+            amount: this.web3.utils.fromWei(event.returnValues.amount, 'ether'),
+          })
+        })
+        this.donations = donations;
+      }.bind(this))
     }
   },
   watch: {
