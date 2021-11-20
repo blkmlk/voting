@@ -1,20 +1,11 @@
 <template>
-  <v-container v-if="!web3Connected" fluid class="down-top-padding">
-    <v-row justify="space-around" class="mb-2">
-        <span class="group pa-2">
-            <div class="col align-self-center">
-                <v-alert type="error">Can't connect to web3</v-alert>
-            </div>
-        </span>
-    </v-row>
-</v-container>
-<v-container v-else>
+<v-container>
     <v-app-bar absolute color="white">
       <v-btn v-if="canGoBack" @click="goBack" class="mx-2 text-center" dark color="#F5F5F5">
         <v-icon dark color="#212121"> mdi-arrow-left-bold </v-icon>
       </v-btn>
       <v-toolbar-title class="ml-5 black--text">
-          {{name}}
+          Crowdfunding
           {{contractState}}
         </v-toolbar-title>
       <v-spacer></v-spacer>
@@ -153,10 +144,14 @@
                   icon="mbi-buffer"
               >
                 <v-card color="blue lighten-4" class="elevation-2 log-item-card">
-                  <v-card-text>
-                    {{donation.message}}
-                    ({{donation.amount}}
-                    <v-icon class="mb-1" size="20" color="black" dark>mdi-ethereum</v-icon>)
+                  <v-card-text class="d-flex justify-space-between">
+                    <div>
+                      {{donation.message}}
+                    </div>
+                    <div>
+                      {{donation.amount}}
+                      <v-icon class="mb-1" style="width: 10px;" size="20" color="black" dark>mdi-ethereum</v-icon>
+                    </div>
                   </v-card-text>
                 </v-card>
               </v-timeline-item>
@@ -353,6 +348,11 @@ export default {
         amount: 0,
       }
     },
+    getDonation() {
+      this.contract.methods.getDonation().call({from: this.account}).then(function (donation) {
+        this.donation = donation;
+      }.bind(this))
+    },
     withdraw() {
       this.contract.methods.withdraw().send({from: this.account}).on('receipt', function () {
         this.loadContractInfo(this.contract)
@@ -368,9 +368,7 @@ export default {
 
         this.readLogs();
       }.bind(this))
-      instance.methods.getDonation().call({from: this.account}).then(function (donation) {
-        this.donation = donation;
-      }.bind(this))
+      this.getDonation();
     },
     checkContract() {
       try {
@@ -387,10 +385,11 @@ export default {
         toBlock: 'latest',
       }).then(function (events) {
         let donations = [];
-        events.map(event => {
-          donations.push({
+        events.forEach(event => {
+          donations.unshift({
             message: event.returnValues.message,
             amount: this.web3.utils.fromWei(event.returnValues.amount, 'ether'),
+            blockNumber: event.blockNumber,
           })
         })
         this.donations = donations;
@@ -398,6 +397,9 @@ export default {
     }
   },
   watch: {
+    account() {
+      this.getDonation();
+    },
     currentTimestamp(value) {
       if (this.contractExpired || this.contractExpiresAt === 0) {
         this.contractRemainingTime = "";
@@ -430,6 +432,7 @@ export default {
 }
 .log-card {
   width: 400px;
+  height: 350px;
 }
 .log-item-card {
   width: 250px;
