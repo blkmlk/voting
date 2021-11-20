@@ -136,7 +136,7 @@
             <v-card-title>
               Payments
             </v-card-title>
-            <v-timeline dense>
+            <v-timeline dense class="overflow-y-auto" style="max-height: 270px">
               <v-timeline-item
                   v-for="donation in donations"
                   small
