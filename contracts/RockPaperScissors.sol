@@ -28,7 +28,7 @@ contract RockPaperScissors {
     address owner;
     address public winner;
     uint256 public bet;
-    uint8 public freePlayers;
+    uint8 public freeSpots;
     mapping(address => Player) players;
     mapping(Move => mapping(Move => uint8)) outcomes;
 
@@ -39,7 +39,7 @@ contract RockPaperScissors {
         owner = msg.sender;
         require(_bet == msg.value, 'invalid value');
         bet = _bet;
-        freePlayers = MAX_PLAYERS-1;
+        freeSpots = MAX_PLAYERS-1;
         players[msg.sender] = Player({
             move: Move.NONE,
             verified: false,
@@ -51,12 +51,12 @@ contract RockPaperScissors {
 
     function join() external payable {
         require(msg.value == bet, 'value does not equal to the bet');
-        require(freePlayers > 0, 'no free spot');
+        require(freeSpots > 0, 'no free spot');
         require(!players[msg.sender].exists, 'player already joined the game');
 
-        freePlayers--;
+        freeSpots--;
 
-        if (freePlayers == 0) {
+        if (freeSpots == 0) {
             emit Started();
         }
 
@@ -70,7 +70,7 @@ contract RockPaperScissors {
     function finish(PlayerMove[] calldata _moves) external {
         require(winner == address(0), 'the game is already finished');
         require(_moves.length == MAX_PLAYERS, 'wrong number of player moves');
-        require(freePlayers == 0, 'the game is not started');
+        require(freeSpots == 0, 'the game is not started');
 
         bytes32 hash;
         bytes32 r;
