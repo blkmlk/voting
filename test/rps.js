@@ -66,8 +66,9 @@ describe("RockPaperScissors", function () {
                     assert.match(exp.toString(), /no free spot/);
                 });
             })
-            it("should finish", async () => {
-                let moves = [];
+
+            let moves = [];
+            it("should prepare moves", async () => {
                 {
                     const nonce = Math.floor(Math.random() * 1e10)
                     let move = Moves[c.MoveA];
@@ -97,8 +98,28 @@ describe("RockPaperScissors", function () {
                         signature: signature,
                     })
                 }
+            })
 
-                if (c.Winner !== -1) {
+            it("should reject finish", async() => {
+                await contract.connect(accounts[2]).finish(moves).catch(exp => {
+                    assert.match(exp.toString(), /the game can be finished only by players/)
+                });
+
+                let invalidMoves = JSON.parse(JSON.stringify(moves));
+                invalidMoves[0].from = accounts[2].address;
+                await contract.connect(accounts[0]).finish(invalidMoves).catch(exp => {
+                    assert.match(exp.toString(), /player does not exist/)
+                });
+            })
+
+            if (c.Winner === -1) {
+                it("should be a draw", async () => {
+                    await contract.connect(accounts[0]).finish(moves).catch(exp => {
+                        assert.match(exp.toString(), /draw/)
+                    });
+                })
+            } else {
+                it("should finish", async () => {
                     const expectedWinner = moves[c.Winner].from;
 
                     await contract.connect(accounts[0]).finish(moves);
@@ -109,12 +130,8 @@ describe("RockPaperScissors", function () {
                     assert.equal(await contract.winner(), expectedWinner);
                     assert.isTrue(events.length === 1);
                     assert.equal(events[0].args.winner, expectedWinner);
-                } else {
-                    await contract.connect(accounts[0]).finish(moves).catch(exp => {
-                        assert.match(exp.toString(), /draw/)
-                    });
-                }
-            })
+                })
+            }
         })
     })
 });
