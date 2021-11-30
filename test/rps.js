@@ -18,9 +18,6 @@ describe("RockPaperScissors", function () {
         contract = await RPS.connect(accounts[0]).deploy(bet, {value: bet});
         await contract.deployed();
 
-        ethers.provider.on({}, log => {
-            console.log(log);
-        })
     })
 
     it("should require valid value", async () => {
@@ -41,6 +38,8 @@ describe("RockPaperScissors", function () {
 
     it("should join", async () => {
         await contract.connect(accounts[1]).join({value: bet});
+
+        assert.isTrue((await contract.queryFilter(contract.filters.Started())).length === 1);
     })
 
     it("should be started", async () => {
@@ -81,7 +80,16 @@ describe("RockPaperScissors", function () {
             })
         }
 
+        const expectedWinner = moves[1].from;
+
         await contract.connect(accounts[0]).finish(moves);
+
+        let events = await contract.queryFilter(contract.filters.Finished());
+
+        assert.equal((await contract.players(expectedWinner)).move, moves[1].move);
+        assert.equal(await contract.winner(), expectedWinner);
+        assert.isTrue(events.length === 1);
+        assert.equal(events[0].args.winner, expectedWinner);
     })
 });
 

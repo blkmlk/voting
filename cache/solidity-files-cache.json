@@ -221,8 +221,8 @@
       ]
     },
     "/home/void/ethereum/js/vue-material/contracts/RockPaperScissors.sol": {
-      "lastModificationDate": 1638194001488,
-      "contentHash": "d0feb69d5f34f2fdfd2e6f008c7b5e56",
+      "lastModificationDate": 1638305652225,
+      "contentHash": "df03745e4da44f254d5d9c6c9d40b90e",
       "sourceName": "contracts/RockPaperScissors.sol",
       "solcConfig": {
         "version": "0.8.0",

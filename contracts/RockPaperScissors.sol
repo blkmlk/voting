@@ -25,12 +25,14 @@ struct PlayerMove {
 
 contract RockPaperScissors {
     uint8 constant MAX_PLAYERS = 2;
-    address owner;
+
+    address public owner;
     address public winner;
     uint256 public bet;
     uint8 public freeSpots;
-    mapping(address => Player) players;
-    mapping(Move => mapping(Move => uint8)) outcomes;
+    mapping(address => Player) public players;
+
+    mapping(Move => mapping(Move => uint8)) internal outcomes;
 
     event Started();
     event Finished(address winner);
