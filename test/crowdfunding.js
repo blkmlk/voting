@@ -5,8 +5,11 @@ describe("Crowdfunding", function () {
   let accounts;
   let contract;
 
-  before(async function() {
+  afterEach(async () => {
     await timeAndMine.mine(1);
+  })
+
+  before(async function() {
     accounts = await ethers.getSigners();
 
     const Crowdfunding = await ethers.getContractFactory("Crowdfunding");
