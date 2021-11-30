@@ -136,7 +136,7 @@ contract RockPaperScissors {
         outcomes[Move.ROCK][Move.PAPER] = 1;
         outcomes[Move.PAPER][Move.ROCK] = 0;
         outcomes[Move.PAPER][Move.SCISSORS] = 1;
-        outcomes[Move.SCISSORS][Move.ROCK] = 0;
-        outcomes[Move.SCISSORS][Move.PAPER] = 1;
+        outcomes[Move.SCISSORS][Move.ROCK] = 1;
+        outcomes[Move.SCISSORS][Move.PAPER] = 0;
     }
 }
