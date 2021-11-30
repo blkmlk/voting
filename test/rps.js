@@ -14,51 +14,15 @@ describe("RockPaperScissors", function () {
     }
 
     let cases = [
-        {
-            MoveA: 'Rock',
-            MoveB: 'Rock',
-            Winner: -1,
-        },
-        {
-            MoveA: 'Rock',
-            MoveB: 'Paper',
-            Winner: 1,
-        },
-        {
-            MoveA: 'Rock',
-            MoveB: 'Scissors',
-            Winner: 0,
-        },
-        {
-            MoveA: 'Paper',
-            MoveB: 'Rock',
-            Winner: 0,
-        },
-        {
-            MoveA: 'Paper',
-            MoveB: 'Paper',
-            Winner: -1,
-        },
-        {
-            MoveA: 'Paper',
-            MoveB: 'Scissors',
-            Winner: 1,
-        },
-        {
-            MoveA: 'Scissors',
-            MoveB: 'Rock',
-            Winner: 1,
-        },
-        {
-            MoveA: 'Scissors',
-            MoveB: 'Paper',
-            Winner: 0,
-        },
-        {
-            MoveA: 'Scissors',
-            MoveB: 'Scissors',
-            Winner: -1,
-        },
+        { MoveA: 'Rock', MoveB: 'Rock', Winner: -1 },
+        { MoveA: 'Rock', MoveB: 'Paper', Winner: 1 },
+        { MoveA: 'Rock', MoveB: 'Scissors', Winner: 0 },
+        { MoveA: 'Paper', MoveB: 'Rock', Winner: 0 },
+        { MoveA: 'Paper', MoveB: 'Paper', Winner: -1 },
+        { MoveA: 'Paper', MoveB: 'Scissors', Winner: 1 },
+        { MoveA: 'Scissors', MoveB: 'Rock', Winner: 1 },
+        { MoveA: 'Scissors', MoveB: 'Paper', Winner: 0 },
+        { MoveA: 'Scissors', MoveB: 'Scissors', Winner: -1 },
     ];
 
     cases.forEach(c => {
