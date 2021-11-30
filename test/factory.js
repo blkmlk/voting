@@ -1,29 +1,26 @@
-const factory = artifacts.require("Factory");
+const { ethers } = require("hardhat");
+const { assert } = require("chai");
 
-/*
- * uncomment accounts to access the test accounts made available by the
- * Ethereum client
- * See docs: https://www.trufflesuite.com/docs/truffle/testing/writing-tests-in-javascript
- */
-contract("factory", function (accounts) {
-  it("should assert true", async function () {
-    await factory.deployed();
-    return assert.isTrue(true);
-  });
+describe("Factory", function () {
+  let accounts;
+  let contract;
 
-  it("should create election", function () {
-    let f;
+  before(async function () {
+    accounts = await ethers.getSigners();
 
-    factory.deployed().then(instance => {
-      f = instance;
-      return instance.createElection(accounts[0], "test");
-    }).then(function () {
-      return f.getElections.call();
-    }).then(elections => {
+    const Factory = await ethers.getContractFactory("Factory");
+    contract = await Factory.connect(accounts[0]).deploy();
+    await contract.deployed();
+  })
+
+  it("should create election", async () => {
+      await contract.createElection("test");
+
+      let elections = await contract.getElections();
       assert.equal(1, elections.length);
-      elections[0].getInfo.call().then(function (info) {
-        assert.equal('test', info.name);
-      })
-    })
+
+      let el = await ethers.getContractAt('IElection', elections[0])
+      let info = await el.getInfo();
+      assert.equal('test', info.name);
   })
 });

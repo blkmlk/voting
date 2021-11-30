@@ -74,8 +74,8 @@
       ]
     },
     "/home/void/ethereum/js/vue-material/contracts/Factory.sol": {
-      "lastModificationDate": 1635794805570,
-      "contentHash": "eb5477410404a23588d0ff02ff318f95",
+      "lastModificationDate": 1638210401295,
+      "contentHash": "d467a1b5a0556d29aeac78dae4316ce9",
       "sourceName": "contracts/Factory.sol",
       "solcConfig": {
         "version": "0.8.0",
