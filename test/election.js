@@ -1,57 +1,49 @@
-const election = artifacts.require("Election");
+const { ethers } = require("hardhat");
+const { assert } = require("chai");
 
-contract("election", function (accounts) {
-  it("should assert true", async function () {
-    await election.deployed();
-    return assert.isTrue(true);
+describe("election", function () {
+  let accounts;
+  let contract;
+
+  before(async function () {
+    accounts = await ethers.getSigners();
+
+    const Election = await ethers.getContractFactory("Election");
+    contract = await Election.connect(accounts[0]).deploy(accounts[0].address, 'Test Election');
+    await contract.deployed();
+  })
+
+  it("should find onwer", async () => {
+      let info = await contract.getInfo();
+      assert.equal(info.owner, accounts[0].address);
   });
 
-  it("should find onwer", () => {
-    return election.deployed().then(instance => {
-      return instance.getInfo.call();
-    }).then(result => {
-      assert.equal(result.owner, accounts[0]);
-    })
+  it("should create candidate", async () => {
+    let info = await contract.getInfo();
+    assert.equal(info.candidates.length, 0);
+
+    await contract.connect(accounts[0]).addCandidates([
+      {
+        name: "Name",
+        surname: "Surname",
+        imageValue: "image value",
+        votes: 0,
+        active: true,
+      }
+    ]);
+
+    info = await contract.getInfo();
+    assert.equal(info.candidates.length, 1);
   });
 
-  it("should create candidate", () => {
-    let el; 
-    return election.deployed().then(instance => {
-      el = instance;
-      return el.getInfo.call();
-    }).then(result => {
-      // assert.equal(result.candidates.length, 0);
-      return el.addCandidates([
-        {
-          name: "Name",
-          surname: "Surname",
-          imageValue: "image value",
-          votes: 0,
-          active: true,
-        }
-      ], {from: accounts[0]});
-    }).then(result => {
-      return el.getInfo.call();
-    }).then(result => {
-      // assert.equal(result.candidates.length, 1);
-    })
-  });
+  it("should vote and retract", async () => {
+      await contract.start(10*60);
+      await contract.connect(accounts[0]).vote(0);
 
-  it("should vote and retract", () => {
-    let el;
-    return election.deployed().then(instance => {
-      el = instance;
-      return el.start(10*60);
-    }).then(result => {
-      return el.vote(0, {from: accounts[0]});
-    }).then(result => {
-      return el.getVote.call({from:accounts[0]});
-    }).then(result => {
-      assert.equal(result.candidateID, 0);
-      assert.equal(result.exists, true);
-      return el.retract({from: accounts[0]});
-    }).then(result => {
-      assert.isNotNull(result);
-    })
+      let vote = await contract.connect(accounts[0]).getVote();
+      assert.equal(vote.candidateID, 0);
+      assert.equal(vote.exists, true);
+
+      await contract.connect(accounts[0]).retract();
   })
 });

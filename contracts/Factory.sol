@@ -10,8 +10,7 @@ contract Factory {
     IElection[] elections;
     ICrowdfunding[] crowdfunding;
 
-    constructor() {
-    }
+    constructor() {}
 
     function createElection(string calldata _name) external {
         elections.push(new Election(msg.sender, _name));

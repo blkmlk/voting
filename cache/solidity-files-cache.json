@@ -1,0 +1,296 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "/Users/islambekbuzarov/ethereum/voting/contracts/Crowdfunding.sol": {
+      "lastModificationDate": 1638378047727,
+      "contentHash": "3aee11133ef4dc279b807c14a046ca29",
+      "sourceName": "contracts/Crowdfunding.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./ICrowdfunding.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "Crowdfunding"
+      ]
+    },
+    "/Users/islambekbuzarov/ethereum/voting/contracts/ICrowdfunding.sol": {
+      "lastModificationDate": 1638378047727,
+      "contentHash": "ec15bc8c5f9e966772371b9b2c82ac36",
+      "sourceName": "contracts/ICrowdfunding.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "ICrowdfunding"
+      ]
+    },
+    "/Users/islambekbuzarov/ethereum/voting/contracts/Factory.sol": {
+      "lastModificationDate": 1638410178940,
+      "contentHash": "d467a1b5a0556d29aeac78dae4316ce9",
+      "sourceName": "contracts/Factory.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./IElection.sol",
+        "./Election.sol",
+        "./ICrowdfunding.sol",
+        "./Crowdfunding.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "Factory"
+      ]
+    },
+    "/Users/islambekbuzarov/ethereum/voting/contracts/IElection.sol": {
+      "lastModificationDate": 1638378047727,
+      "contentHash": "1cf7e9e13446d1f0132d93c73079003b",
+      "sourceName": "contracts/IElection.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "IElection"
+      ]
+    },
+    "/Users/islambekbuzarov/ethereum/voting/contracts/Election.sol": {
+      "lastModificationDate": 1638378047727,
+      "contentHash": "29b0d7937f8522ab553da8687f8a37e2",
+      "sourceName": "contracts/Election.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./IElection.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "Election"
+      ]
+    },
+    "/Users/islambekbuzarov/ethereum/voting/contracts/Migrations.sol": {
+      "lastModificationDate": 1638378047727,
+      "contentHash": "50b3b1dc92806dc8f604fc8c5c65518f",
+      "sourceName": "contracts/Migrations.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.4.22 <0.9.0"
+      ],
+      "artifacts": [
+        "Migrations"
+      ]
+    },
+    "/Users/islambekbuzarov/ethereum/voting/contracts/RockPaperScissors.sol": {
+      "lastModificationDate": 1638410178940,
+      "contentHash": "01416866f1163c9ea2efa184c08eb094",
+      "sourceName": "contracts/RockPaperScissors.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "hardhat/console.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "RockPaperScissors"
+      ]
+    },
+    "/Users/islambekbuzarov/ethereum/voting/node_modules/hardhat/console.sol": {
+      "lastModificationDate": 1638410488369,
+      "contentHash": "cc4777addd464ea56fa35b1c45df0591",
+      "sourceName": "hardhat/console.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.4.22 <0.9.0"
+      ],
+      "artifacts": [
+        "console"
+      ]
+    }
+  }
+}
