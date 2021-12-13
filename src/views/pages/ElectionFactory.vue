@@ -41,9 +41,6 @@
 
 <script>
 const ethers = require("ethers");
-import Contract from "web3-eth-contract";
-import Factory from '@/contracts/Factory.json'
-import IElection from '@/contracts/IElection.json'
 
 export default {
   name: "Factory",
