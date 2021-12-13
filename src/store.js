@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import getWeb3 from './getWeb3';
+import getEthers from "./getEthers";
 Vue.use(Vuex)
 
 export default new Vuex.Store({
@@ -10,6 +11,7 @@ export default new Vuex.Store({
         SidebarColor: 'white',
         SidebarBg: '',
         web3: null,
+        ethers: null,
         newBlock: null,
         accounts: [],
         networkId: 0,
@@ -31,11 +33,18 @@ export default new Vuex.Store({
                 state.newBlock = event;
             })
         },
+        SET_ETHERS(state, payload) {
+            state.ethers = payload;
+            console.log("Ethers connected");
+        },
         SET_ACCOUNTS (state, payload) {
             state.accounts = payload;
         },
         SET_NETWORK_ID (state, payload) {
             state.networkId = payload;
+        },
+        SET_NEW_BLOCK (state, payload) {
+            state.newBlock= payload;
         }
     },
     actions: {
@@ -61,6 +70,30 @@ export default new Vuex.Store({
                 commit('SET_NETWORK_ID', id);
                 commit('SET_WEB3', web3);
             })
+        },
+        async REGISTER_ETHERS({commit}) {
+            let provider = await getEthers();
+            await provider.ready;
+
+            let accounts = provider.listAccounts();
+            commit('SET_ACCOUNTS', accounts);
+
+            setInterval(function () {
+                provider.listAccounts().then(function (accounts) {
+                    if (accounts[0] !== this.state.accounts[0]) {
+                        commit('SET_ACCOUNTS', accounts);
+                    }
+                }.bind(this))
+            }.bind(this), 500);
+
+            provider.on('block', async function (blockNumber) {
+                commit('SET_NEW_BLOCK', blockNumber);
+            })
+
+            let networkId = provider.getNetwork()['chainId']
+            commit('SET_NETWORK_ID', networkId);
+
+            commit('SET_ETHERS', provider);
         }
     }
 })

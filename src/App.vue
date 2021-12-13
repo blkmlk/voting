@@ -1,6 +1,6 @@
 <template>
   <v-app id="materialpro" :class="`${!$vuetify.breakpoint.smAndDown ? 'full-sidebar' : 'mini-sidebar'}`">
-    <v-container v-if="!web3Connected" fluid class="down-top-padding">
+    <v-container v-if="!connected" fluid class="down-top-padding">
       <v-row justify="space-around" class="mb-2">
         <span class="group pa-2">
             <div class="col align-self-center">
@@ -19,12 +19,11 @@
 export default {
   name: 'App',
   beforeCreate() {
-    this.$store.dispatch('REGISTER_WEB3');
+    this.$store.dispatch('REGISTER_ETHERS');
   },
   computed: {
-    web3Connected() {
-      console.log(this.$store.state.web3);
-      return this.$store.state.web3 != null;
+    connected() {
+      return this.$store.state.ethers != null;
     },
   }
 };
