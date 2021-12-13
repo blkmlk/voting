@@ -40,12 +40,14 @@
 </template>
 
 <script>
+const ethers = require("ethers");
 import Contract from "web3-eth-contract";
 import Factory from '@/contracts/Factory.json'
 import IElection from '@/contracts/IElection.json'
 
 export default {
   name: "Factory",
+  props: ['info'],
   data() {
     return {
       headers: [
@@ -63,13 +65,13 @@ export default {
     }
   },
   created() {
-    if (this.web3Connected) {
+    if (this.connected) {
       this.loadContract();
     }
   },
   computed: {
-    web3Connected() {
-      return this.$store.state.web3 != null;
+    connected() {
+      return this.$store.state.ethers != null;
     },
     newBlock() {
       return this.$store.state.newBlock;
@@ -106,7 +108,7 @@ export default {
         return;
       }
 
-      this.factory.methods.createElection(this.newElectionName).send({from: this.account}).on('receipt', function () {
+      this.factory.createElection(this.newElectionName).then(function () {
         this.newElectionName = "";
         this.newDialog = false;
       }.bind(this))
@@ -137,9 +139,10 @@ export default {
     },
     loadContract() {
       try {
-        let contract = new Contract(Factory.abi, Factory.networks[this.networkId].address);
-        contract.setProvider(this.$store.state.web3.currentProvider);
-        this.factory = contract;
+        this.factory = new ethers.Contract(
+            this.info.Factory.address,
+            this.info.Factory.abi,
+            this.$store.state.ethers.getSigner(0));
       } catch(e) {
         console.log(e);
       }
@@ -151,7 +154,7 @@ export default {
       for (let i = 0; i < elections.length; i++) {
         let e = elections[i];
         promises.push(async function() {
-          let info = await e.methods.getInfo().call();
+          let info = await e.getInfo();
           return {
             id: i,
             info: info,
@@ -172,11 +175,14 @@ export default {
         return;
       }
 
-      factory.methods.getElections().call({from: this.account}).then(function (elections) {
+      factory.getElections().then(function (elections) {
         let contracts = [];
-        for (const e of elections) {
-          let contract = new Contract(IElection.abi, e);
-          contract.setProvider(this.$store.state.web3.currentProvider);
+        for (const address of elections) {
+          let contract = new ethers.Contract(
+              address,
+              this.info.IElection.abi,
+              this.$store.state.ethers.getSigner(0),
+          );
           contracts.push(contract);
         }
 
@@ -184,7 +190,7 @@ export default {
       }.bind(this))
 
     },
-    web3Connected(connected) {
+    connected(connected) {
       if (!connected) {
         this.factory = null;
         return;
