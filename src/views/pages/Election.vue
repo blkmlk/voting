@@ -1,14 +1,5 @@
 <template>
-  <v-container v-if="!web3Connected" fluid class="down-top-padding">
-    <v-row justify="space-around" class="mb-2">
-        <span class="group pa-2">
-            <div class="col align-self-center">
-                <v-alert type="error">Can't connect to web3</v-alert>
-            </div>
-        </span>
-    </v-row>
-</v-container>
-<v-container v-else>
+<v-container>
     <v-app-bar absolute color="white">
       <v-btn v-if="canGoBack" @click="goBack" class="mx-2 text-center" dark color="#F5F5F5">
         <v-icon dark color="#212121"> mdi-arrow-left-bold </v-icon>
@@ -120,8 +111,7 @@
 
 <script>
 
-import IElection from '@/contracts/IElection.json';
-import Contract from 'web3-eth-contract';
+const ethers = require("ethers");
 import {AvatarGenerator} from 'random-avatar-generator';
 
 export default {
@@ -135,7 +125,7 @@ export default {
       this.currentTimestamp = parseInt(Date.now()/1000);
     }.bind(this), 1000);
 
-    if (this.web3Connected) {
+    if (this.connected) {
       this.checkContract();
       this.loadContractInfo(this.contract);
       this.loadVote();
@@ -144,6 +134,7 @@ export default {
   beforeDestroy() {
     clearInterval(this.timeInterval);
   },
+  props: ["info"],
   data() {
     return {
       name: "",
@@ -256,8 +247,8 @@ export default {
 
       return this.contractInfo.expiresAt <= this.currentTimestamp;
     },
-    web3Connected() {
-      return this.$store.state.web3 != null;
+    connected() {
+      return this.$store.state.ethers != null;
     },
     newBlock() {
       return this.$store.state.newBlock;
@@ -268,9 +259,6 @@ export default {
       }
       return this.$store.state.accounts[0];
     },
-    web3() {
-      return this.$store.state.web3;
-    },
   },
   methods: {
     goBack() {
@@ -280,10 +268,10 @@ export default {
       return this.generator.generateRandomAvatar(seed);
     },
     sendVote(id) {
-      this.contract.methods.vote(id).send({from: this.account});
+      this.contract.vote(id);
     },
     sendRetract() {
-      this.contract.methods.retract().send({from: this.account});
+      this.contract.retract();
     },
     getVotes(id) {
       if (this.totalVotes === 0) {
@@ -293,7 +281,7 @@ export default {
       return (parseInt(this.candidates[id].votes) / this.totalVotes) * 100;
     },
     start() {
-      this.contract.methods.start(this.inputMinutes*60).send({from: this.account}).on('receipt', function () {
+      this.contract.start(this.inputMinutes*60).then(function () {
         this.closeStartDialog();
       }.bind(this))
     },
@@ -304,7 +292,7 @@ export default {
       this.addDialog = false;
     },
     save() {
-      this.contract.methods.addCandidates(this.addCandidates).send({from: this.account}).on('receipt', function(){
+      this.contract.addCandidates(this.addCandidates).then(function(){
         this.addCandidates = [];
         this.editMode = false;
       }.bind(this));
@@ -348,7 +336,7 @@ export default {
       return String(num).padStart(places, '0');
     },
     loadContractInfo(instance) {
-      instance.methods.getInfo().call({from: this.account}).then(function(info){
+      instance.getInfo().then(function(info){
         this.contractInfo = info;
         this.name = info.name;
 
@@ -362,7 +350,7 @@ export default {
         return
       }
 
-      this.contract.methods.getVote().call({from: this.account}).then(function (vote) {
+      this.contract.getVote().then(function (vote) {
         this.vote = vote;
       }.bind(this))
     },
@@ -375,9 +363,11 @@ export default {
     },
     checkContract() {
       try {
-        let contract = new Contract(IElection.abi, this.address);
-        contract.setProvider(this.$store.state.web3.currentProvider);
-        this.contract = contract;
+        this.contract = new ethers.Contract(
+            this.address,
+            this.info.IElection.abi,
+            this.$store.state.ethers.getSigner(0),
+        );
       } catch(e) {
         console.log(e);
       }
@@ -416,7 +406,7 @@ export default {
     account() {
       this.loadVote();
     },
-    web3Connected(connected) {
+    connected(connected) {
       if (!connected) {
         this.contract = null;
         return;

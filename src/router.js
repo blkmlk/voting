@@ -26,6 +26,9 @@ let router = new Router({
                     name: 'Election',
                     path: 'election/:address',
                     component: () => import('@/views/pages/Election'),
+                    props: {
+                        info: address,
+                    }
                 },
                 {
                     name: 'Crowdfunding Factory',
@@ -39,6 +42,9 @@ let router = new Router({
                     name: 'Crowdfunding',
                     path: 'crowdfunding/:address',
                     component: () => import('@/views/pages/Crowdfunding'),
+                    props: {
+                        info: address,
+                    }
                 }
             ]
         },
