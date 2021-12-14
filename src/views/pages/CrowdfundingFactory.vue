@@ -43,12 +43,11 @@
 </template>
 
 <script>
-import Contract from "web3-eth-contract";
-import Factory from '@/contracts/Factory.json'
-import ICrowdfunding from '@/contracts/ICrowdfunding.json'
+const ethers = require("ethers");
 
 export default {
   name: "Factory",
+  props: [ "info" ],
   data() {
     return {
       headers: [
@@ -72,13 +71,13 @@ export default {
     }
   },
   created() {
-    if (this.web3Connected) {
+    if (this.connected) {
       this.loadContract();
     }
   },
   computed: {
-    web3Connected() {
-      return this.$store.state.web3 != null;
+    connected() {
+      return this.$store.state.ethers != null;
     },
     newBlock() {
       return this.$store.state.newBlock;
@@ -96,8 +95,8 @@ export default {
           id: i,
           name: this.crowdfundingInfo[i].name,
           owner: this.crowdfundingInfo[i].owner,
-          target_amount: this.web3.utils.fromWei(this.crowdfundingInfo[i].targetAmount, 'ether'),
-          current_amount: this.web3.utils.fromWei(this.crowdfundingInfo[i].currentAmount, 'ether'),
+          target_amount: ethers.utils.formatEther(this.crowdfundingInfo[i].targetAmount).toString(),
+          current_amount: ethers.utils.formatEther(this.crowdfundingInfo[i].currentAmount).toString(),
           address: this.crowdfundingInfo[i].target,
           expires: this.getExpiration(this.crowdfundingInfo[i].expiresAt),
         })
@@ -105,9 +104,6 @@ export default {
 
       return items;
     },
-    web3() {
-      return this.$store.state.web3;
-    }
   },
   methods: {
     create() {
@@ -131,14 +127,15 @@ export default {
         return;
       }
 
-      let targetAmount = this.web3.utils.toWei(this.newCrowdfunding.targetAmount, 'ether');
+      let targetAmount = ethers.utils.parseEther(this.newCrowdfunding.targetAmount).toString();
+      // let targetAmount = this.web3.utils.toWei(this.newCrowdfunding.targetAmount, 'ether');
 
-      this.factory.methods.createCrowdfunding(
+      this.factory.createCrowdfunding(
           this.newCrowdfunding.name,
           this.newCrowdfunding.description,
           targetAmount,
           this.newCrowdfunding.targetAddress
-      ).send({from: this.account}).on('receipt', function () {
+      ).then(function () {
         this.newCrowdfunding = {
           name: "",
           description: "",
@@ -172,9 +169,11 @@ export default {
     },
     loadContract() {
       try {
-        let contract = new Contract(Factory.abi, Factory.networks[this.networkId].address);
-        contract.setProvider(this.$store.state.web3.currentProvider);
-        this.factory = contract;
+        this.factory = new ethers.Contract(
+            this.info.Factory.address,
+            this.info.Factory.abi,
+            this.$store.state.ethers.getSigner(0),
+        );
       } catch(e) {
         console.log(e);
       }
@@ -186,7 +185,7 @@ export default {
       for (let i = 0; i < items.length; i++) {
         let e = items[i];
         promises.push(async function() {
-          let info = await e.methods.getInfo().call();
+          let info = await e.getInfo();
           return {
             id: i,
             info: info,
@@ -207,15 +206,18 @@ export default {
         return;
       }
 
-      factory.methods.getCrowdfunding().call({from: this.account}).then(function (items) {
+      factory.getCrowdfunding().then(function (items) {
         if (items === null) {
           return
         }
 
         let contracts = [];
-        for (const c of items) {
-          let contract = new Contract(ICrowdfunding.abi, c);
-          contract.setProvider(this.$store.state.web3.currentProvider);
+        for (const address of items) {
+          let contract = new ethers.Contract(
+              address,
+              this.info.ICrowdfunding.abi,
+              this.$store.state.ethers.getSigner(0),
+          );
           contracts.push(contract);
         }
 
@@ -223,7 +225,7 @@ export default {
       }.bind(this))
 
     },
-    web3Connected(connected) {
+    connected(connected) {
       if (!connected) {
         this.factory = null;
         return;
