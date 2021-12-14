@@ -132,7 +132,7 @@ export default {
       return (new Date(expiresAt * 1000)).toString();
     },
     getAddress(idx) {
-      return this.elections[idx]['_address'];
+      return this.elections[idx].address;
     },
     loadContract() {
       try {

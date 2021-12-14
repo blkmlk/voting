@@ -3,7 +3,7 @@
     v-model="Sidebar_drawer"
     :dark="SidebarColor !== 'white'"
     :color="SidebarColor"
-    mobile-break-point="960"
+    mobile-breakpoint="960"
     clipped
     :right="$vuetify.rtl"
     mini-variant-width="70"
