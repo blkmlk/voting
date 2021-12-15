@@ -163,12 +163,14 @@
 
 <script>
 
+const ethers = require("ethers");
 import Crowdfunding from '@/contracts/Crowdfunding.json';
 import Contract from 'web3-eth-contract';
 import {AvatarGenerator} from 'random-avatar-generator';
 import {getAvatar, getRemainingTime} from "../../helpers";
 
 export default {
+  props: ["info"],
   created() {
     this.address = this.$route.params.address;
     this.generator = new AvatarGenerator();
@@ -179,7 +181,7 @@ export default {
       this.currentTimestamp = parseInt(Date.now()/1000);
     }.bind(this), 1000);
 
-    if (this.web3Connected) {
+    if (this.connected) {
       this.checkContract();
       this.loadContractInfo(this.contract);
     }
@@ -296,8 +298,8 @@ export default {
 
       return this.contractInfo.expiresAt <= this.currentTimestamp;
     },
-    web3Connected() {
-      return this.$store.state.web3 != null;
+    connected() {
+      return this.$store.state.ethers != null;
     },
     newBlock() {
       return this.$store.state.newBlock;
@@ -308,9 +310,6 @@ export default {
       }
       return this.$store.state.accounts[0];
     },
-    web3() {
-      return this.$store.state.web3;
-    },
   },
   methods: {
     goBack() {
@@ -320,7 +319,7 @@ export default {
       return this.generator.generateRandomAvatar(seed);
     },
     start() {
-      this.contract.methods.start(this.inputMinutes*60).send({from: this.account}).on('receipt', function () {
+      this.contract.start(this.inputMinutes*60).then(function () {
         this.startDialog = false;
       }.bind(this))
     },
@@ -335,11 +334,8 @@ export default {
         amount = this.contractInfo.targetAmount;
       }
 
-      let value = this.web3.utils.toWei(amount.toString(), 'ether');
-      this.contract.methods.
-        donate(this.newDonation.message).
-        send({from: this.account, value: value}).
-        on('receipt', function() {
+      let value = ethers.utils.parseEther(amount.toString()).toString();
+      this.contract.donate(this.newDonation.message, {value: value}).then(function() {
           this.donationDialog = false;
       }.bind(this));
 
@@ -349,17 +345,17 @@ export default {
       }
     },
     getDonation() {
-      this.contract.methods.getDonation().call({from: this.account}).then(function (donation) {
+      this.contract.getDonation().then(function (donation) {
         this.donation = donation;
       }.bind(this))
     },
     withdraw() {
-      this.contract.methods.withdraw().send({from: this.account}).on('receipt', function () {
+      this.contract.withdraw().then(function () {
         this.loadContractInfo(this.contract)
       }.bind(this));
     },
     loadContractInfo(instance) {
-      instance.methods.getInfo().call({from: this.account}).then(function(info){
+      instance.getInfo().then(function(info){
         this.contractInfo = info;
         this.name = info.name;
 
@@ -372,9 +368,11 @@ export default {
     },
     checkContract() {
       try {
-        let contract = new Contract(Crowdfunding.abi, this.address);
-        contract.setProvider(this.$store.state.web3.currentProvider);
-        this.contract = contract;
+        this.contract = new ethers.Contract(
+            this.address,
+            this.info.ICrowdfunding.abi,
+            this.$store.state.ethers.getSigner(0),
+        );
       } catch(e) {
         console.log(e);
       }
@@ -388,7 +386,7 @@ export default {
         events.forEach(event => {
           donations.unshift({
             message: event.returnValues.message,
-            amount: this.web3.utils.fromWei(event.returnValues.amount, 'ether'),
+            amount: ethers.utils.formatEther(event.returnValues.amount).toString(),
             blockNumber: event.blockNumber,
           })
         })
@@ -411,7 +409,7 @@ export default {
     newBlock() {
       this.loadContractInfo(this.contract);
     },
-    web3Connected(connected) {
+    connected(connected) {
       if (!connected) {
         this.contract = null;
         return;
