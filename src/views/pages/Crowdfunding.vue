@@ -163,12 +163,12 @@
 
 <script>
 
-import Crowdfunding from '@/contracts/Crowdfunding.json';
-import Contract from 'web3-eth-contract';
+const ethers = require("ethers");
 import {AvatarGenerator} from 'random-avatar-generator';
 import {getAvatar, getRemainingTime} from "../../helpers";
 
 export default {
+  props: ['info'],
   created() {
     this.address = this.$route.params.address;
     this.generator = new AvatarGenerator();
@@ -179,8 +179,8 @@ export default {
       this.currentTimestamp = parseInt(Date.now()/1000);
     }.bind(this), 1000);
 
-    if (this.web3Connected) {
-      this.checkContract();
+    if (this.connected) {
+      this.loadContract();
       this.loadContractInfo(this.contract);
     }
   },
@@ -215,14 +215,14 @@ export default {
         return "0";
       }
 
-      return this.web3.utils.fromWei(this.contractInfo.targetAmount, 'ether');
+      return ethers.utils.formatEther(this.contractInfo.targetAmount).toString();
     },
     currentAmount() {
       if (this.contractInfo.currentAmount === undefined) {
         return "0";
       }
 
-      return this.web3.utils.fromWei(this.contractInfo.currentAmount, 'ether');
+      return ethers.utils.formatEther(this.contractInfo.currentAmount).toString();
     },
     amountRatio() {
       if (this.contractInfo.startedAt === 0) {
@@ -236,7 +236,7 @@ export default {
         return "0";
       }
 
-      return this.web3.utils.fromWei(this.donation.amount, 'ether');
+      return ethers.utils.formatEther(this.donation.amount).toString();
     },
     isTarget() {
       return this.contractInfo.target === this.account;
@@ -296,8 +296,8 @@ export default {
 
       return this.contractInfo.expiresAt <= this.currentTimestamp;
     },
-    web3Connected() {
-      return this.$store.state.web3 != null;
+    connected() {
+      return this.$store.state.ethers != null;
     },
     newBlock() {
       return this.$store.state.newBlock;
@@ -308,9 +308,6 @@ export default {
       }
       return this.$store.state.accounts[0];
     },
-    web3() {
-      return this.$store.state.web3;
-    },
   },
   methods: {
     goBack() {
@@ -320,7 +317,7 @@ export default {
       return this.generator.generateRandomAvatar(seed);
     },
     start() {
-      this.contract.methods.start(this.inputMinutes*60).send({from: this.account}).on('receipt', function () {
+      this.contract.start(this.inputMinutes*60).then(function () {
         this.startDialog = false;
       }.bind(this))
     },
@@ -335,11 +332,8 @@ export default {
         amount = this.contractInfo.targetAmount;
       }
 
-      let value = this.web3.utils.toWei(amount.toString(), 'ether');
-      this.contract.methods.
-        donate(this.newDonation.message).
-        send({from: this.account, value: value}).
-        on('receipt', function() {
+      let value = ethers.utils.parseEther(amount.toString()).toString();
+      this.contract.donate(this.newDonation.message, {value: value}).then(function() {
           this.donationDialog = false;
       }.bind(this));
 
@@ -349,46 +343,47 @@ export default {
       }
     },
     getDonation() {
-      this.contract.methods.getDonation().call({from: this.account}).then(function (donation) {
+      this.contract.getDonation().then(function (donation) {
         this.donation = donation;
       }.bind(this))
     },
     withdraw() {
-      this.contract.methods.withdraw().send({from: this.account}).on('receipt', function () {
+      this.contract.withdraw().then(function () {
         this.loadContractInfo(this.contract)
       }.bind(this));
     },
     loadContractInfo(instance) {
-      instance.methods.getInfo().call({from: this.account}).then(function(info){
+      instance.getInfo().then(function(info){
         this.contractInfo = info;
         this.name = info.name;
 
         this.contractExpiresAt = parseInt(info.expiresAt);
-        console.log(info);
 
         this.readLogs();
       }.bind(this))
       this.getDonation();
     },
-    checkContract() {
+    loadContract() {
       try {
-        let contract = new Contract(Crowdfunding.abi, this.address);
-        contract.setProvider(this.$store.state.web3.currentProvider);
-        this.contract = contract;
+        this.contract = new ethers.Contract(
+            this.address,
+            this.info.ICrowdfunding.abi,
+            this.$store.state.ethers.getSigner(0),
+        );
       } catch(e) {
         console.log(e);
       }
     },
     readLogs() {
-      this.contract.getPastEvents("NewDonation", {
-        fromBlock: this.contractInfo.startBlock,
-        toBlock: 'latest',
-      }).then(function (events) {
+      this.contract.queryFilter(
+          this.contract.filters.NewDonation(),
+          parseInt(this.contractInfo.startBlock),
+      ).then(function (events) {
         let donations = [];
         events.forEach(event => {
           donations.unshift({
-            message: event.returnValues.message,
-            amount: this.web3.utils.fromWei(event.returnValues.amount, 'ether'),
+            message: event.args.message,
+            amount: ethers.utils.formatEther(event.args.amount).toString(),
             blockNumber: event.blockNumber,
           })
         })
@@ -417,7 +412,7 @@ export default {
         return;
       }
 
-      this.checkContract();
+      this.loadContract();
     },
     contract(instance) {
       this.loadContractInfo(instance);

@@ -6,8 +6,8 @@ async function main() {
     const factory = await Factory.deploy();
 
     const fArtifact = await hardhat.artifacts.readArtifact("Factory");
-    const ieArtifact = await hardhat.artifacts.readArtifact("IElection");
-    const cfArtifact = await hardhat.artifacts.readArtifact("ICrowdfunding")
+    const ieArtifact = await hardhat.artifacts.readArtifact("Election");
+    const cfArtifact = await hardhat.artifacts.readArtifact("Crowdfunding")
 
     await fs.writeFileSync("./src/address.json", JSON.stringify({
         Factory: {

@@ -63,7 +63,7 @@ export default {
         name: "",
         description: "",
         targetAmount: 0,
-        targetAddress: "0x879CC2bf498892D5deDb75C591625bAdc9499Df9",
+        targetAddress: "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
       },
       factory: null,
       crowdfundingList: [],
@@ -165,7 +165,7 @@ export default {
       return (new Date(expiresAt * 1000)).toString();
     },
     getAddress(idx) {
-      return this.crowdfundingList[idx]['_address'];
+      return this.crowdfundingList[idx].address;
     },
     loadContract() {
       try {

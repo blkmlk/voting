@@ -1,6 +1,6 @@
 {
   "Factory": {
-    "address": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+    "address": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
     "abi": [
       {
         "inputs": [],
@@ -81,6 +81,22 @@
       {
         "inputs": [
           {
+            "internalType": "address",
+            "name": "_owner",
+            "type": "address"
+          },
+          {
+            "internalType": "string",
+            "name": "_name",
+            "type": "string"
+          }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+      },
+      {
+        "inputs": [
+          {
             "components": [
               {
                 "internalType": "string",
@@ -109,7 +125,7 @@
               }
             ],
             "internalType": "struct Candidate[]",
-            "name": "",
+            "name": "_candidates",
             "type": "tuple[]"
           }
         ],
@@ -122,6 +138,45 @@
           }
         ],
         "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "name": "candidates",
+        "outputs": [
+          {
+            "internalType": "string",
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "surname",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "imageValue",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "votes",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "active",
+            "type": "bool"
+          }
+        ],
+        "stateMutability": "view",
         "type": "function"
       },
       {
@@ -243,7 +298,7 @@
         "inputs": [
           {
             "internalType": "uint256",
-            "name": "",
+            "name": "_expiresIn",
             "type": "uint256"
           }
         ],
@@ -262,7 +317,7 @@
         "inputs": [
           {
             "internalType": "uint256",
-            "name": "",
+            "name": "_candidateId",
             "type": "uint256"
           }
         ],
@@ -284,8 +339,58 @@
       {
         "inputs": [
           {
+            "internalType": "address",
+            "name": "_owner",
+            "type": "address"
+          },
+          {
             "internalType": "string",
-            "name": "",
+            "name": "_name",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "_description",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "_targetAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "_target",
+            "type": "address"
+          }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": false,
+            "internalType": "string",
+            "name": "message",
+            "type": "string"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "name": "NewDonation",
+        "type": "event"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "message",
             "type": "string"
           }
         ],
@@ -398,7 +503,7 @@
         "inputs": [
           {
             "internalType": "uint256",
-            "name": "",
+            "name": "_expiresIn",
             "type": "uint256"
           }
         ],
@@ -413,6 +518,10 @@
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
+      },
+      {
+        "stateMutability": "payable",
+        "type": "receive"
       }
     ]
   }
