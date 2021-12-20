@@ -2,7 +2,7 @@ import Vue from 'vue'
 import Router from 'vue-router'
 
 Vue.use(Router)
-const address = require('./address.json')
+const info = require('./info.json')
 
 let router = new Router({
     mode: 'hash',
@@ -19,7 +19,7 @@ let router = new Router({
                     path: 'election',
                     component: () => import('@/views/pages/ElectionFactory'),
                     props: {
-                        info: address,
+                        info: info,
                     }
                 },
                 {
@@ -27,7 +27,7 @@ let router = new Router({
                     path: 'election/:address',
                     component: () => import('@/views/pages/Election'),
                     props: {
-                        info: address,
+                        info: info,
                     }
                 },
                 {
@@ -35,7 +35,7 @@ let router = new Router({
                     path: 'crowdfunding',
                     component: () => import('@/views/pages/CrowdfundingFactory'),
                     props: {
-                        info: address,
+                        info: info,
                     }
                 },
                 {
@@ -43,7 +43,7 @@ let router = new Router({
                     path: 'crowdfunding/:address',
                     component: () => import('@/views/pages/Crowdfunding'),
                     props: {
-                        info: address,
+                        info: info,
                     }
                 },
                 {
@@ -51,7 +51,7 @@ let router = new Router({
                     path: 'rsp',
                     component: () => import('@/views/pages/RockPaperScissorsFactory'),
                     props: {
-                        info: address,
+                        info: info,
                     }
                 },
             ]
