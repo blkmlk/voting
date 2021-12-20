@@ -105,7 +105,7 @@ export default {
         return;
       }
 
-      this.factory.createElection(this.newElectionName).then(function () {
+      this.factory.create(this.newElectionName).then(function () {
         this.newElectionName = "";
         this.newDialog = false;
       }.bind(this))
@@ -172,12 +172,12 @@ export default {
         return;
       }
 
-      factory.getElections().then(function (elections) {
+      factory.list().then(function (elections) {
         let contracts = [];
         for (const address of elections) {
           let contract = new ethers.Contract(
               address,
-              this.info.IElection.abi,
+              this.info.Election.abi,
               this.$store.state.ethers.getSigner(0),
           );
           contracts.push(contract);

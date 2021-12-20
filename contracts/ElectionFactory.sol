@@ -8,11 +8,11 @@ contract ElectionFactory {
 
     constructor() {}
 
-    function createElection(string calldata _name) external {
+    function create(string calldata _name) external {
         elections.push(new Election(msg.sender, _name));
     }
 
-    function getElections() public view returns (Election[] memory) {
+    function list() public view returns (Election[] memory) {
         return elections;
     }
 }

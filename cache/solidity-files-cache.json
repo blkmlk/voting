@@ -142,8 +142,8 @@
       ]
     },
     "/Users/id/devel/voting/contracts/CrowdfundingFactory.sol": {
-      "lastModificationDate": 1640026378731,
-      "contentHash": "918292d0ca3ec7feeab8f90ea5e3a6ad",
+      "lastModificationDate": 1640030425564,
+      "contentHash": "6a09b486fde0eef7cbc0714cb23ad819",
       "sourceName": "contracts/CrowdfundingFactory.sol",
       "solcConfig": {
         "version": "0.8.0",
@@ -179,8 +179,8 @@
       ]
     },
     "/Users/id/devel/voting/contracts/ElectionFactory.sol": {
-      "lastModificationDate": 1640026838795,
-      "contentHash": "b67a3cfffe6e01b8b0a8bfac9bb2b288",
+      "lastModificationDate": 1640030415864,
+      "contentHash": "f02b0cd49af4af4ec70050eaad78f400",
       "sourceName": "contracts/ElectionFactory.sol",
       "solcConfig": {
         "version": "0.8.0",
@@ -216,8 +216,8 @@
       ]
     },
     "/Users/id/devel/voting/contracts/RockPaperScissorsFactory.sol": {
-      "lastModificationDate": 1640026847974,
-      "contentHash": "49fddff0893a002399dad0590de7c989",
+      "lastModificationDate": 1640030405999,
+      "contentHash": "2be094955ef16e2b621704f2f30c2b3b",
       "sourceName": "contracts/RockPaperScissorsFactory.sol",
       "solcConfig": {
         "version": "0.8.0",

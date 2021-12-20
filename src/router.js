@@ -49,7 +49,7 @@ let router = new Router({
                 {
                     name: 'RockScissorsPaper Factory',
                     path: 'rsp',
-                    component: () => import('@/views/pages/RockScissorsPaperFactory'),
+                    component: () => import('@/views/pages/RockPaperScissorsFactory'),
                     props: {
                         info: address,
                     }

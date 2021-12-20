@@ -8,11 +8,11 @@ contract RockPaperScissorsFactory {
 
     constructor() {}
 
-    function createRPS(string calldata _name) external payable {
+    function create(string calldata _name) external payable {
         rps.push(new RockPaperScissors{value: msg.value}(_name));
     }
 
-    function getRPS() public view returns (RockPaperScissors[] memory) {
+    function list() public view returns (RockPaperScissors[] memory) {
         return rps;
     }
 }

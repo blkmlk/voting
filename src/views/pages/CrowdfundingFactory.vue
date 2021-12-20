@@ -129,7 +129,7 @@ export default {
 
       let targetAmount = ethers.utils.parseEther(this.newCrowdfunding.targetAmount).toString();
 
-      this.factory.createCrowdfunding(
+      this.factory.create(
           this.newCrowdfunding.name,
           this.newCrowdfunding.description,
           targetAmount,
@@ -205,7 +205,7 @@ export default {
         return;
       }
 
-      factory.getCrowdfunding().then(function (items) {
+      factory.list().then(function (items) {
         if (items === null) {
           return
         }
@@ -214,7 +214,7 @@ export default {
         for (const address of items) {
           let contract = new ethers.Contract(
               address,
-              this.info.ICrowdfunding.abi,
+              this.info.Crowdfunding.abi,
               this.$store.state.ethers.getSigner(0),
           );
           contracts.push(contract);

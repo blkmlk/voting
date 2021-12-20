@@ -18,9 +18,9 @@ describe("Factory", function () {
   });
 
   it("should create election", async () => {
-      await electionFactory.createElection("test");
+      await electionFactory.create("test");
 
-      let elections = await electionFactory.getElections();
+      let elections = await electionFactory.list();
       assert.equal(1, elections.length);
 
       let el = await ethers.getContractAt('Election', elections[0])
@@ -29,9 +29,9 @@ describe("Factory", function () {
   });
 
   it("should create RPS", async () => {
-      await rpsFactory.createRPS("test", {value: 100});
+      await rpsFactory.create("test", {value: 100});
 
-      let rpsList = await rpsFactory.getRPS();
+      let rpsList = await rpsFactory.list();
       assert.equal(1, rpsList.length);
 
       let rps = await ethers.getContractAt('RockPaperScissors', rpsList[0])
