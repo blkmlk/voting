@@ -128,7 +128,6 @@ export default {
       }
 
       let targetAmount = ethers.utils.parseEther(this.newCrowdfunding.targetAmount).toString();
-      // let targetAmount = this.web3.utils.toWei(this.newCrowdfunding.targetAmount, 'ether');
 
       this.factory.createCrowdfunding(
           this.newCrowdfunding.name,
@@ -170,8 +169,8 @@ export default {
     loadContract() {
       try {
         this.factory = new ethers.Contract(
-            this.info.Factory.address,
-            this.info.Factory.abi,
+            this.info.CrowdfundingFactory.address,
+            this.info.CrowdfundingFactory.abi,
             this.$store.state.ethers.getSigner(0),
         );
       } catch(e) {

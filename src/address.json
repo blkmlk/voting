@@ -1,6 +1,42 @@
 {
-  "Factory": {
-    "address": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+  "ElectionFactory": {
+    "address": "0xde2Bd2ffEA002b8E84ADeA96e5976aF664115E2c",
+    "abi": [
+      {
+        "inputs": [],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "_name",
+            "type": "string"
+          }
+        ],
+        "name": "createElection",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "getElections",
+        "outputs": [
+          {
+            "internalType": "contract Election[]",
+            "name": "",
+            "type": "address[]"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      }
+    ]
+  },
+  "CrowdfundingFactory": {
+    "address": "0xefc1aB2475ACb7E60499Efb171D173be19928a05",
     "abi": [
       {
         "inputs": [],
@@ -36,37 +72,11 @@
         "type": "function"
       },
       {
-        "inputs": [
-          {
-            "internalType": "string",
-            "name": "_name",
-            "type": "string"
-          }
-        ],
-        "name": "createElection",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-      },
-      {
         "inputs": [],
         "name": "getCrowdfunding",
         "outputs": [
           {
-            "internalType": "contract ICrowdfunding[]",
-            "name": "",
-            "type": "address[]"
-          }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-      },
-      {
-        "inputs": [],
-        "name": "getElections",
-        "outputs": [
-          {
-            "internalType": "contract IElection[]",
+            "internalType": "contract Crowdfunding[]",
             "name": "",
             "type": "address[]"
           }
@@ -76,7 +86,43 @@
       }
     ]
   },
-  "IElection": {
+  "RockPaperScissorsFactory": {
+    "address": "0x870526b7973b56163a6997bB7C886F5E4EA53638",
+    "abi": [
+      {
+        "inputs": [],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "_name",
+            "type": "string"
+          }
+        ],
+        "name": "createRPS",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "getRPS",
+        "outputs": [
+          {
+            "internalType": "contract RockPaperScissors[]",
+            "name": "",
+            "type": "address[]"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      }
+    ]
+  },
+  "Election": {
     "abi": [
       {
         "inputs": [
@@ -334,7 +380,7 @@
       }
     ]
   },
-  "ICrowdfunding": {
+  "Crowdfunding": {
     "abi": [
       {
         "inputs": [
@@ -522,6 +568,206 @@
       {
         "stateMutability": "payable",
         "type": "receive"
+      }
+    ]
+  },
+  "RockPaperScissors": {
+    "abi": [
+      {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "_name",
+            "type": "string"
+          }
+        ],
+        "stateMutability": "payable",
+        "type": "constructor"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": false,
+            "internalType": "address",
+            "name": "winner",
+            "type": "address"
+          }
+        ],
+        "name": "Finished",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [],
+        "name": "Started",
+        "type": "event"
+      },
+      {
+        "inputs": [],
+        "name": "bet",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "from",
+                "type": "address"
+              },
+              {
+                "internalType": "enum Move",
+                "name": "move",
+                "type": "uint8"
+              },
+              {
+                "internalType": "uint256",
+                "name": "nonce",
+                "type": "uint256"
+              },
+              {
+                "internalType": "bytes",
+                "name": "signature",
+                "type": "bytes"
+              }
+            ],
+            "internalType": "struct PlayerMove[]",
+            "name": "_moves",
+            "type": "tuple[]"
+          }
+        ],
+        "name": "finish",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "freeSpots",
+        "outputs": [
+          {
+            "internalType": "uint8",
+            "name": "",
+            "type": "uint8"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "getInfo",
+        "outputs": [
+          {
+            "components": [
+              {
+                "internalType": "string",
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "internalType": "address",
+                "name": "owner",
+                "type": "address"
+              },
+              {
+                "internalType": "uint256",
+                "name": "bet",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct RPSInfo",
+            "name": "",
+            "type": "tuple"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "join",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "name",
+        "outputs": [
+          {
+            "internalType": "string",
+            "name": "",
+            "type": "string"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "owner",
+        "outputs": [
+          {
+            "internalType": "address",
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "name": "players",
+        "outputs": [
+          {
+            "internalType": "enum Move",
+            "name": "move",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bool",
+            "name": "verified",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "exists",
+            "type": "bool"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "winner",
+        "outputs": [
+          {
+            "internalType": "address",
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
       }
     ]
   }

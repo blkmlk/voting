@@ -1,9 +1,30 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import './IElection.sol';
+struct ElectionInfo {
+    bool started;
+    address owner;
+    string name;
+    uint expiresAt;
+    uint votes;
+    Candidate[] candidates;
+}
 
-contract Election is IElection {
+struct Candidate {
+    string name;
+    string surname;
+    string imageValue;
+    uint votes;
+    bool active;
+}
+
+struct Vote {
+    uint candidateID;
+    uint expiresAt;
+    bool exists;
+}
+
+contract Election {
     address owner;
     string name;
     uint expiresAt;
@@ -22,8 +43,7 @@ contract Election is IElection {
         name = _name;
     }
 
-    // @override
-    function start(uint _expiresIn) external override returns(bool) {
+    function start(uint _expiresIn) external returns(bool) {
         require(!started);
         require(candidates.length > 0);
 
@@ -32,8 +52,7 @@ contract Election is IElection {
         return true;
     }
 
-    // @override
-    function getInfo() external override view returns(ElectionInfo memory) {
+    function getInfo() external view returns(ElectionInfo memory) {
         Candidate[] memory tmp = candidates;
 
         uint totalVotes = 0;
@@ -54,8 +73,7 @@ contract Election is IElection {
         });
     }
 
-    // @override
-    function addCandidates(Candidate[] calldata _candidates) external override ownerOnly returns(uint) {
+    function addCandidates(Candidate[] calldata _candidates) external ownerOnly returns(uint) {
         require(!started);
 
         for (uint i = 0; i < _candidates.length; i++) {
@@ -67,8 +85,7 @@ contract Election is IElection {
         return candidates.length - 1;
     }
 
-    // @override
-    function vote(uint _candidateId) external override returns(bool) {
+    function vote(uint _candidateId) external returns(bool) {
         require(started);
         require(block.timestamp < expiresAt);
         require(!votes[msg.sender].exists);
@@ -87,13 +104,11 @@ contract Election is IElection {
         return true;
     }
 
-    // @override
-    function getVote() external override view returns(Vote memory) {
+    function getVote() external view returns(Vote memory) {
         return votes[msg.sender];
     }
 
-    // @override
-    function retract() external override returns(bool) {
+    function retract() external returns(bool) {
         require(started);
         require(block.timestamp < expiresAt);
 

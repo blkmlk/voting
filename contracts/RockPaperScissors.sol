@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "hardhat/console.sol";
-
 enum Move {
     NONE,
     ROCK,
@@ -23,9 +21,16 @@ struct PlayerMove {
     bytes signature;
 }
 
+struct RPSInfo {
+    string name;
+    address owner;
+    uint256 bet;
+}
+
 contract RockPaperScissors {
     uint8 constant MAX_PLAYERS = 2;
 
+    string public name;
     address public owner;
     address public winner;
     uint256 public bet;
@@ -37,10 +42,10 @@ contract RockPaperScissors {
     event Started();
     event Finished(address winner);
 
-    constructor(uint256 _bet) payable {
+    constructor(string memory _name) payable {
+        name = _name;
         owner = msg.sender;
-        require(_bet == msg.value, 'invalid value');
-        bet = _bet;
+        bet = msg.value;
         freeSpots = MAX_PLAYERS-1;
         players[msg.sender] = Player({
             move: Move.NONE,
@@ -49,6 +54,14 @@ contract RockPaperScissors {
         });
 
         initOutcomes();
+    }
+
+    function getInfo() external view returns (RPSInfo memory) {
+        return RPSInfo({
+            name: name,
+            owner: owner,
+            bet: bet
+        });
     }
 
     function join() external payable {
@@ -91,7 +104,7 @@ contract RockPaperScissors {
             require(!player.verified, 'player is already verified');
 
             hash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32",
-                keccak256(abi.encodePacked(m.nonce, m.nonce))));
+                keccak256(abi.encodePacked(m.nonce, m.move))));
 
             bytes memory signature = m.signature;
 

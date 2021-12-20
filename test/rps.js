@@ -35,15 +35,8 @@ describe("RockPaperScissors", function () {
                 accounts = await ethers.getSigners();
 
                 RPS = await ethers.getContractFactory("RockPaperScissors");
-                contract = await RPS.connect(accounts[0]).deploy(bet, {value: bet});
+                contract = await RPS.connect(accounts[0]).deploy("test", {value: bet});
                 await contract.deployed();
-            })
-
-            it("should require valid value", async () => {
-                await RPS.connect(accounts[0]).deploy(10).catch(exp => {
-                    assert.match(exp.toString(), /invalid value/);
-                })
-                await RPS.connect(accounts[0]).deploy(10, {value: 10})
             })
 
             it("should reject join", async () => {
@@ -72,7 +65,7 @@ describe("RockPaperScissors", function () {
                 {
                     const nonce = Math.floor(Math.random() * 1e10)
                     let move = Moves[c.MoveA];
-                    let message = ethers.utils.solidityKeccak256(['uint256', 'uint256'], [nonce, nonce]);
+                    let message = ethers.utils.solidityKeccak256(['uint256', 'uint8'], [nonce, move]);
                     let signature = await signMessage(accounts[0], message);
 
                     moves.push({
@@ -87,7 +80,7 @@ describe("RockPaperScissors", function () {
                 {
                     const nonce = Math.floor(Math.random() * 1e10)
                     let move = Moves[c.MoveB];
-                    let message = ethers.utils.solidityKeccak256(['uint256', 'uint256'], [nonce, nonce]);
+                    let message = ethers.utils.solidityKeccak256(['uint256', 'uint8'], [nonce, move]);
                     let signature = await signMessage(accounts[1], message);
 
                     moves.push({

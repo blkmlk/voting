@@ -58,11 +58,15 @@ export default {
         icon: "mdi-vote",
         to: "/election"
       },
-
       {
         title: "Crowdfunding",
         icon: "mdi-hand-coin-outline",
         to: "/crowdfunding"
+      },
+      {
+        title: "Rock Scissors Paper",
+        icon: "mdi-fencing",
+        to: "/rsp"
       },
     ]
   }),

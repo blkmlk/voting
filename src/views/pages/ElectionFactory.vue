@@ -137,8 +137,8 @@ export default {
     loadContract() {
       try {
         this.factory = new ethers.Contract(
-            this.info.Factory.address,
-            this.info.Factory.abi,
+            this.info.ElectionFactory.address,
+            this.info.ElectionFactory.abi,
             this.$store.state.ethers.getSigner(0));
       } catch(e) {
         console.log(e);
