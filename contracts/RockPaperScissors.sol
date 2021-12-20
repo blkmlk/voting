@@ -42,9 +42,9 @@ contract RockPaperScissors {
     event Started();
     event Finished(address winner);
 
-    constructor(string memory _name) payable {
+    constructor(string memory _name, address _owner) payable {
         name = _name;
-        owner = msg.sender;
+        owner = _owner;
         bet = msg.value;
         freeSpots = MAX_PLAYERS-1;
         players[msg.sender] = Player({

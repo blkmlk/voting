@@ -111,7 +111,7 @@ export default {
 
       let bet = ethers.utils.parseEther(this.newGame.bet).toString();
 
-      this.factory.createRPS(this.newGame.name, {value: bet}).then(function () {
+      this.factory.create(this.newGame.name, {value: bet}).then(function () {
         this.newGame = {
           name: "",
           bet: 0,
@@ -180,7 +180,7 @@ export default {
         return;
       }
 
-      factory.getRPS().then(function (items) {
+      factory.list().then(function (items) {
         if (items === null) {
           return
         }

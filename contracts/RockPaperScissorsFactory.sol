@@ -9,7 +9,7 @@ contract RockPaperScissorsFactory {
     constructor() {}
 
     function create(string calldata _name) external payable {
-        rps.push(new RockPaperScissors{value: msg.value}(_name));
+        rps.push(new RockPaperScissors{value: msg.value}(_name, msg.sender));
     }
 
     function list() public view returns (RockPaperScissors[] memory) {
