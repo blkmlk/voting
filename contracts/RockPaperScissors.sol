@@ -82,6 +82,15 @@ contract RockPaperScissors {
         });
     }
 
+    function leave() external {
+        require(players[msg.sender].exists, 'player not found');
+        require(winner == address(0), 'the game is already finished');
+
+        delete players[msg.sender];
+        freeSpots++;
+        payable (msg.sender).transfer(bet);
+    }
+
     function finish(PlayerMove[] calldata _moves) external {
         require(winner == address(0), 'the game is already finished');
         require(_moves.length == MAX_PLAYERS, 'wrong number of player moves');

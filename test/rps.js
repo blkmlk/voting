@@ -54,6 +54,16 @@ describe("RockPaperScissors", function () {
                 assert.isTrue((await contract.queryFilter(contract.filters.Started())).length === 1);
             })
 
+            it("should leave", async () => {
+                await contract.connect(accounts[1]).leave();
+            })
+
+            it("should join again", async () => {
+                await contract.connect(accounts[1]).join({value: bet});
+
+                assert.isTrue((await contract.queryFilter(contract.filters.Started())).length === 2);
+            })
+
             it("should be started", async () => {
                 await contract.connect(accounts[2]).join({value: bet}).catch(exp => {
                     assert.match(exp.toString(), /no free spot/);

@@ -54,6 +54,14 @@ let router = new Router({
                         info: info,
                     }
                 },
+                {
+                    name: 'Rock Paper Scissors',
+                    path: 'rps/:address',
+                    component: () => import('@/views/pages/RockPaperScissors'),
+                    props: {
+                        info: info,
+                    }
+                },
             ]
         },
 
