@@ -46,6 +46,7 @@ export default {
       contractOwner: null,
       generator: null,
       joined: false,
+      players: [],
     }
   },
   computed: {
@@ -107,6 +108,23 @@ export default {
 
       instance.players(this.account).then(function(player) {
         this.joined = player.exists;
+      }.bind(this))
+
+      instance.startBlock().then(async function(blockNumber) {
+        let topicJoined = instance.filters.Joined(null);
+        let topicLeft = instance.filters.Left(null);
+
+        let events = await instance.queryFilter([[topicJoined, topicLeft]], blockNumber.toNumber());
+
+        let players = {};
+        events.forEach(e => {
+          if (e.topics[0] === topicJoined.topics[0]) {
+            players[e.args[0]] = true;
+          } else if (e.topics[0] === topicLeft.topics[0]){
+            delete players[e.args[0]];
+          }
+        })
+        this.players = Object.keys(players);
       }.bind(this))
     },
     checkContract() {

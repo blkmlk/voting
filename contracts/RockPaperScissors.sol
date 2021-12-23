@@ -35,11 +35,14 @@ contract RockPaperScissors {
     address public winner;
     uint256 public bet;
     uint8 public freeSpots;
+    uint256 public startBlock;
     mapping(address => Player) public players;
 
     mapping(Move => mapping(Move => uint8)) internal outcomes;
 
     event Started();
+    event Joined(address player);
+    event Left(address player);
     event Finished(address winner);
 
     constructor(string memory _name, address _owner, uint256 _bet) {
@@ -47,6 +50,7 @@ contract RockPaperScissors {
         owner = _owner;
         bet = _bet;
         freeSpots = MAX_PLAYERS;
+        startBlock = block.number;
 
         initOutcomes();
     }
@@ -75,6 +79,8 @@ contract RockPaperScissors {
             verified: false,
             exists: true
         });
+
+        emit Joined(msg.sender);
     }
 
     function leave() external {
@@ -84,6 +90,8 @@ contract RockPaperScissors {
         delete players[msg.sender];
         freeSpots++;
         payable (msg.sender).transfer(bet);
+
+        emit Left(msg.sender);
     }
 
     function finish(PlayerMove[] calldata _moves) external {
