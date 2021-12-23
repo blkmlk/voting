@@ -48,7 +48,7 @@ let router = new Router({
                 },
                 {
                     name: 'RockScissorsPaper Factory',
-                    path: 'rsp',
+                    path: 'rps',
                     component: () => import('@/views/pages/RockPaperScissorsFactory'),
                     props: {
                         info: info,

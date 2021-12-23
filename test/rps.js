@@ -35,8 +35,9 @@ describe("RockPaperScissors", function () {
                 accounts = await ethers.getSigners();
 
                 RPS = await ethers.getContractFactory("RockPaperScissors");
-                contract = await RPS.connect(accounts[0]).deploy("test", accounts[0].address, {value: bet});
+                contract = await RPS.connect(accounts[0]).deploy("test", accounts[0].address, bet);
                 await contract.deployed();
+                await contract.connect(accounts[0]).join({value: bet});
             })
 
             it("should reject join", async () => {

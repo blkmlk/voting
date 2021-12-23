@@ -8,8 +8,8 @@ contract RockPaperScissorsFactory {
 
     constructor() {}
 
-    function create(string calldata _name) external payable {
-        rps.push(new RockPaperScissors{value: msg.value}(_name, msg.sender));
+    function create(string calldata _name, uint256 _bet) external payable {
+        rps.push(new RockPaperScissors(_name, msg.sender, _bet));
     }
 
     function list() public view returns (RockPaperScissors[] memory) {

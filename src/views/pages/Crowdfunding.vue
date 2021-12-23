@@ -367,7 +367,7 @@ export default {
       try {
         this.contract = new ethers.Contract(
             this.address,
-            this.info.ICrowdfunding.abi,
+            this.info.Crowdfunding.abi,
             this.$store.state.ethers.getSigner(0),
         );
       } catch(e) {

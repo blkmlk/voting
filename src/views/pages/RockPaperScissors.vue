@@ -10,13 +10,12 @@
       <v-spacer></v-spacer>
     </v-app-bar>
     <v-row justify="center">
-        <v-card class="card text-center">
             <v-container fill-height>
                 <v-row align="center" justify="center">
-                  <v-btn class="mx-2 text-center" dark color="indigo">Join</v-btn>
+                  <v-btn v-if="canJoin" class="mx-2 text-center" dark color="indigo" @click="join">Join</v-btn>
+                  <v-btn v-else-if="canLeave" class="mx-2 text-center" dark color="red" @click="leave">Leave</v-btn>
                 </v-row>
             </v-container>
-        </v-card>
     </v-row>
 </v-container>
 </template>
@@ -40,35 +39,31 @@ export default {
   data() {
     return {
       name: "",
-      inputMinutes: 10,
-      startDialog: false,
-      addDialog: false,
-      addCandidate: {
-        name: "",
-        surname: "",
-      },
       address: "",
       contract: null,
       contractInfo: null,
+      freeSpots: 0,
       contractOwner: null,
-      contractExpiresAt: 0,
-      candidates: [],
-      vote: null,
-      voteExpired: false,
-      contractRemainingTime: "",
-      voteRemainingTime: "",
       generator: null,
-      editMode: false,
-      addCandidates: [],
-      savedCandidates: [],
-      totalVotes: 0,
-      currentTimestamp: 0,
-      timeInterval: null,
+      joined: false,
     }
   },
   computed: {
     canGoBack() {
       return window.prevUrl !== "/";
+    },
+    canJoin() {
+      if (this.contract == null || this.freeSpots <= 0) {
+        return false;
+      }
+      return !this.joined;
+    },
+    canLeave() {
+      if (this.contract == null) {
+        return false;
+      }
+
+      return this.joined;
     },
     connected() {
       return this.$store.state.ethers != null;
@@ -87,6 +82,12 @@ export default {
     goBack() {
       this.$router.go(-1);
     },
+    join() {
+      this.contract.join({value: this.contractInfo.bet});
+    },
+    leave() {
+      this.contract.leave();
+    },
     getAvatar(seed) {
       return this.generator.generateRandomAvatar(seed);
     },
@@ -98,6 +99,14 @@ export default {
         this.contractInfo = info;
         this.name = info.name;
         this.contractOwner = info.owner;
+      }.bind(this))
+
+      instance.freeSpots().then(function (value) {
+        this.freeSpots = value;
+      }.bind(this));
+
+      instance.players(this.account).then(function(player) {
+        this.joined = player.exists;
       }.bind(this))
     },
     checkContract() {
@@ -128,7 +137,7 @@ export default {
       this.loadContractInfo(instance);
     },
     contractInfo(info) {
-    }
+    },
   }
 }
 </script>

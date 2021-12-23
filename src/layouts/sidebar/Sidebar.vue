@@ -66,7 +66,7 @@ export default {
       {
         title: "Rock Scissors Paper",
         icon: "mdi-fencing",
-        to: "/rsp"
+        to: "/rps"
       },
     ]
   }),

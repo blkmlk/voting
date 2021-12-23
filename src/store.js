@@ -75,7 +75,7 @@ export default new Vuex.Store({
             let provider = await getEthers();
             await provider.ready;
 
-            let accounts = provider.listAccounts();
+            let accounts = await provider.listAccounts();
             commit('SET_ACCOUNTS', accounts);
 
             setInterval(function () {

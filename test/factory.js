@@ -29,7 +29,7 @@ describe("Factory", function () {
   });
 
   it("should create RPS", async () => {
-      await rpsFactory.create("test", {value: 100});
+      await rpsFactory.create("test", 100);
 
       let rpsList = await rpsFactory.list();
       assert.equal(1, rpsList.length);
