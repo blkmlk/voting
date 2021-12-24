@@ -92,9 +92,6 @@ export default {
     getAvatar(seed) {
       return this.generator.generateRandomAvatar(seed);
     },
-    zeroPad (num, places) {
-      return String(num).padStart(places, '0');
-    },
     loadContractInfo(instance) {
       instance.getInfo().then(function(info){
         this.contractInfo = info;
@@ -153,8 +150,6 @@ export default {
     },
     contract(instance) {
       this.loadContractInfo(instance);
-    },
-    contractInfo(info) {
     },
   }
 }

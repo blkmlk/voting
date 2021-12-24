@@ -18,6 +18,7 @@ struct PlayerMove {
     address from;
     Move move;
     uint256 nonce;
+    uint256 gameID;
     bytes signature;
 }
 
@@ -105,6 +106,8 @@ contract RockPaperScissors {
         uint8 v;
         bool found = false;
 
+        require(_moves[0].gameID == _moves[1].gameID, 'gameID values must be the same');
+
         for(uint i = 0; i < _moves.length; i++) {
             PlayerMove calldata m = _moves[i];
             require(m.from != address(0), 'invalid address');
@@ -116,7 +119,7 @@ contract RockPaperScissors {
             require(!player.verified, 'player is already verified');
 
             hash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32",
-                keccak256(abi.encodePacked(m.nonce, m.move))));
+                keccak256(abi.encodePacked(m.nonce, m.gameID, m.move))));
 
             bytes memory signature = m.signature;
 

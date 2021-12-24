@@ -73,16 +73,19 @@ describe("RockPaperScissors", function () {
 
             let moves = [];
             it("should prepare moves", async () => {
+                const gameID = Math.floor(Math.random() * 1e10)
+
                 {
                     const nonce = Math.floor(Math.random() * 1e10)
                     let move = Moves[c.MoveA];
-                    let message = ethers.utils.solidityKeccak256(['uint256', 'uint8'], [nonce, move]);
+                    let message = ethers.utils.solidityKeccak256(['uint256', 'uint256', 'uint8'], [nonce, gameID, move]);
                     let signature = await signMessage(accounts[0], message);
 
                     moves.push({
                         from: accounts[0].address,
                         move: move,
                         nonce: nonce,
+                        gameID: gameID,
                         hash: message,
                         signature: signature,
                     })
@@ -91,13 +94,14 @@ describe("RockPaperScissors", function () {
                 {
                     const nonce = Math.floor(Math.random() * 1e10)
                     let move = Moves[c.MoveB];
-                    let message = ethers.utils.solidityKeccak256(['uint256', 'uint8'], [nonce, move]);
+                    let message = ethers.utils.solidityKeccak256(['uint256', 'uint256', 'uint8'], [nonce, gameID, move]);
                     let signature = await signMessage(accounts[1], message);
 
                     moves.push({
                         from: accounts[1].address,
                         move: move,
                         nonce: nonce,
+                        gameID: gameID,
                         hash: message,
                         signature: signature,
                     })
@@ -113,6 +117,12 @@ describe("RockPaperScissors", function () {
                 invalidMoves[0].from = accounts[2].address;
                 await contract.connect(accounts[0]).finish(invalidMoves).catch(exp => {
                     assert.match(exp.toString(), /player does not exist/)
+                });
+
+                invalidMoves = JSON.parse(JSON.stringify(moves));
+                invalidMoves[0].gameID = 0;
+                await contract.connect(accounts[0]).finish(invalidMoves).catch(exp => {
+                    assert.match(exp.toString(), /gameID values must be the same/)
                 });
             })
 
