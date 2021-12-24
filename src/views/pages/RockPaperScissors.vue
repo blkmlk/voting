@@ -13,7 +13,10 @@
             <v-container fill-height>
                 <v-row align="center" justify="center">
                   <v-btn v-if="canJoin" class="mx-2 text-center" dark color="indigo" @click="join">Join</v-btn>
-                  <v-btn v-else-if="canLeave" class="mx-2 text-center" dark color="red" @click="leave">Leave</v-btn>
+                  <div v-else-if="canLeave" >
+                    <v-btn class="mx-2 text-center" dark color="green" @click="play">Play</v-btn>
+                    <v-btn class="mx-2 text-center" dark color="red" @click="leave">Leave</v-btn>
+                  </div>
                 </v-row>
             </v-container>
     </v-row>
@@ -30,10 +33,12 @@ export default {
     this.address = this.$route.params.address;
     this.generator = new AvatarGenerator();
 
-    if (this.connected) {
-      this.checkContract();
-      this.loadContractInfo(this.contract);
-    }
+    this.$connect('ws://localhost:8090/ws', {format: 'json'})
+    this.$socket.onopen = this.onWsConnect;
+    this.$socket.onmessage = this.onWsMessage;
+  },
+  beforeDestroy() {
+    this.$disconnect();
   },
   props: ["info"],
   data() {
@@ -47,6 +52,7 @@ export default {
       generator: null,
       joined: false,
       players: [],
+      wsConnection: null,
     }
   },
   computed: {
@@ -67,7 +73,7 @@ export default {
       return this.joined;
     },
     connected() {
-      return this.$store.state.ethers != null;
+      return this.$store.state.ethers != null && this.wsConnection !== null;
     },
     newBlock() {
       return this.$store.state.newBlock;
@@ -83,11 +89,34 @@ export default {
     goBack() {
       this.$router.go(-1);
     },
+    onWsConnect(conn) {
+      this.wsConnection = conn;
+    },
+    onWsMessage(message) {
+      console.log("Message", message);
+    },
     join() {
       this.contract.join({value: this.contractInfo.bet});
     },
     leave() {
       this.contract.leave();
+    },
+    play() {
+      let nonce = Math.floor(Math.random() * 1e10)
+      let message = ethers.utils.solidityKeccak256(['uint256', 'address'], [nonce, this.account]);
+      this.signMessage(this.$store.state.ethers.getSigner(0), message).then(function (signature) {
+        this.$socket.sendObj({
+          type: "PLAY",
+          address: this.account,
+          nonce: nonce,
+          signature: signature,
+          gameAddress: this.address,
+        })
+      }.bind(this))
+    },
+    signMessage(signer, message) {
+      let hashed = ethers.utils.arrayify(message);
+      return signer.signMessage(hashed);
     },
     getAvatar(seed) {
       return this.generator.generateRandomAvatar(seed);
