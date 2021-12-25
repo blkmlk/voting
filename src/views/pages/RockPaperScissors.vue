@@ -11,10 +11,21 @@
     </v-app-bar>
     <v-row justify="center">
             <v-container fill-height>
+                <v-row v-if="started" align="center" justify="center" class="mb-5">
+                  <v-btn class="mx-2 text-center" dark color="indigo" @click="makeMove('rock')">
+                    <v-icon dark> mdi-diamond-stone </v-icon>
+                  </v-btn>
+                  <v-btn class="mx-2 text-center" dark color="indigo" @click="makeMove('paper')">
+                    <v-icon dark> mdi-file </v-icon>
+                  </v-btn>
+                  <v-btn class="mx-2 text-center" dark color="indigo" @click="makeMove('scissors')">
+                    <v-icon dark> mdi-content-cut </v-icon>
+                  </v-btn>
+                </v-row>
                 <v-row align="center" justify="center">
                   <v-btn v-if="canJoin" class="mx-2 text-center" dark color="indigo" @click="join">Join</v-btn>
                   <div v-else-if="canLeave" >
-                    <v-btn class="mx-2 text-center" dark color="green" @click="play">Play</v-btn>
+                    <v-btn v-if="!accepted" class="mx-2 text-center" dark color="green" @click="play">Play</v-btn>
                     <v-btn class="mx-2 text-center" dark color="red" @click="leave">Leave</v-btn>
                   </div>
                 </v-row>
@@ -27,6 +38,12 @@
 
 const ethers = require("ethers");
 import {AvatarGenerator} from 'random-avatar-generator';
+
+const Moves = {
+  Rock: 1,
+  Paper: 2,
+  Scissors: 3
+}
 
 export default {
   created() {
@@ -51,6 +68,10 @@ export default {
       contractOwner: null,
       generator: null,
       joined: false,
+      accepted: false,
+      started: false,
+      moves: null,
+      gameID: 0,
       players: [],
       wsConnection: null,
     }
@@ -72,6 +93,9 @@ export default {
 
       return this.joined;
     },
+    canBeFinished() {
+      return this.moves !== null;
+    },
     connected() {
       return this.$store.state.ethers != null && this.wsConnection !== null;
     },
@@ -92,14 +116,37 @@ export default {
     onWsConnect(conn) {
       this.wsConnection = conn;
     },
-    onWsMessage(message) {
-      console.log("Message", message);
+    onWsMessage(event) {
+      let msg = JSON.parse(event.data);
+      switch (msg.type) {
+        case 'ACCEPTED':
+          this.accepted = true;
+          this.started = false;
+          break;
+        case 'START':
+          this.started = true;
+          this.gameID = msg.gameID;
+          console.log("Started with Game ID:", msg.gameID);
+          break;
+        case 'STOP':
+          this.accepted = false;
+          this.started = false;
+          break;
+        case 'FINISH':
+          this.moves = msg.moves;
+          console.log("Got moves", msg.moves);
+          break;
+      }
     },
     join() {
       this.contract.join({value: this.contractInfo.bet});
     },
     leave() {
-      this.contract.leave();
+      this.contract.leave().then(function () {
+        this.$disconnect();
+        this.accepted = false;
+        this.started = false;
+      }.bind(this));
     },
     play() {
       let nonce = Math.floor(Math.random() * 1e10)
@@ -113,6 +160,27 @@ export default {
           gameAddress: this.address,
         })
       }.bind(this))
+    },
+    makeMove(value) {
+      let move = 0;
+      switch (value) {
+        case 'rock': move = Moves.Rock; break;
+        case 'paper': move = Moves.Paper; break;
+        case 'scissors': move = Moves.Scissors; break;
+      }
+
+      let nonce = Math.floor(Math.random() * 1e10)
+      let message = ethers.utils.solidityKeccak256(['uint256', 'uint256', 'uint8'], [nonce, this.gameID, move]);
+      this.signMessage(this.$store.state.ethers.getSigner(0), message).then(function (signature) {
+        this.$socket.sendObj({
+          type: "MOVE",
+          nonce: nonce,
+          move: move,
+          signature: signature,
+        })
+      }.bind(this))
+
+      console.log("Made move", move);
     },
     signMessage(signer, message) {
       let hashed = ethers.utils.arrayify(message);
