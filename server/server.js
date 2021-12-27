@@ -71,7 +71,7 @@ wsServer.on('connection', (conn, req) => {
                 game.players++;
                 game.clients.push(remote);
 
-                conn.send(JSON.stringify({type: 'ACCEPTED'}))
+                conn.send(JSON.stringify({type: 'APPROVED'}))
 
                 if (game.players === 2) {
                     game.clients.forEach(remote => {
@@ -102,6 +102,7 @@ wsServer.on('connection', (conn, req) => {
                     signature: msg.signature,
                 }
                 games[p.gameAddress].moves++;
+                p.conn.send(JSON.stringify({type: 'MOVED'}))
 
                 if (games[p.gameAddress].moves === 2) {
                     let moves = [];

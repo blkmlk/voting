@@ -22,6 +22,10 @@
                       <v-col cols="12">
                         <v-text-field v-model="newGame.name" label="Name"></v-text-field>
                         <v-text-field v-model="newGame.bet" label="Your bet"></v-text-field>
+                        <v-subheader class="pl-0 mb-10">
+                          Minutes
+                        </v-subheader>
+                        <v-slider v-model="newGame.minutes" thumb-label="always" min="2" step="2" max="20"></v-slider>
                       </v-col>
                     </v-row>
                   </v-container>
@@ -57,6 +61,7 @@ export default {
       newGame: {
         name: "",
         bet: 0,
+        minutes: "0",
       },
       factory: null,
       gameList: [],
@@ -109,9 +114,10 @@ export default {
         return;
       }
 
+      let expiresIn = parseInt(this.newGame.minutes) * 60;
       let bet = ethers.utils.parseEther(this.newGame.bet).toString();
 
-      this.factory.create(this.newGame.name, bet).then(function () {
+      this.factory.create(this.newGame.name, bet, expiresIn).then(function () {
         this.newGame = {
           name: "",
           bet: 0,

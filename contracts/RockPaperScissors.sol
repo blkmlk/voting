@@ -35,6 +35,7 @@ contract RockPaperScissors {
     address public owner;
     address public winner;
     uint256 public bet;
+    uint256 public expiresAt;
     uint8 public freeSpots;
     uint256 public startBlock;
     mapping(address => Player) public players;
@@ -46,10 +47,13 @@ contract RockPaperScissors {
     event Left(address player);
     event Finished(address winner);
 
-    constructor(string memory _name, address _owner, uint256 _bet) {
+    constructor(string memory _name, address _owner, uint256 _bet, uint _expiresIn) {
+        require(_expiresIn > 0, 'expiration time should be positive');
+
         name = _name;
         owner = _owner;
         bet = _bet;
+        expiresAt = block.timestamp + _expiresIn;
         freeSpots = MAX_PLAYERS;
         startBlock = block.number;
 
@@ -68,6 +72,7 @@ contract RockPaperScissors {
         require(msg.value == bet, 'value does not equal to the bet');
         require(freeSpots > 0, 'no free spot');
         require(!players[msg.sender].exists, 'player already joined the game');
+        require(block.timestamp <= expiresAt, 'the game is expired');
 
         freeSpots--;
 
@@ -87,6 +92,7 @@ contract RockPaperScissors {
     function leave() external {
         require(players[msg.sender].exists, 'player not found');
         require(winner == address(0), 'the game is already finished');
+        require(freeSpots > 0 || block.timestamp > expiresAt, 'the game is already started');
 
         delete players[msg.sender];
         freeSpots++;
@@ -96,9 +102,13 @@ contract RockPaperScissors {
     }
 
     function finish(PlayerMove[] calldata _moves) external {
-        require(winner == address(0), 'the game is already finished');
+        require(players[msg.sender].exists, 'player not found');
         require(_moves.length == MAX_PLAYERS, 'wrong number of player moves');
         require(freeSpots == 0, 'the game is not started');
+
+        if (winner != address(0)) {
+            return;
+        }
 
         bytes32 hash;
         bytes32 r;

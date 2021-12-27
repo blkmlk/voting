@@ -72,8 +72,8 @@
       ]
     },
     "/Users/id/devel/voting/contracts/RockPaperScissors.sol": {
-      "lastModificationDate": 1640367775322,
-      "contentHash": "66ea916afff7978df5a8d9dd8ff06730",
+      "lastModificationDate": 1640539202254,
+      "contentHash": "94d13a3394990e19c8e9169bb82c4e46",
       "sourceName": "contracts/RockPaperScissors.sol",
       "solcConfig": {
         "version": "0.8.0",
@@ -216,8 +216,8 @@
       ]
     },
     "/Users/id/devel/voting/contracts/RockPaperScissorsFactory.sol": {
-      "lastModificationDate": 1640265302433,
-      "contentHash": "3136feda3c2481463e56afffe544cec9",
+      "lastModificationDate": 1640499728348,
+      "contentHash": "019ee2528d4f8b85eeedd752a37d4d42",
       "sourceName": "contracts/RockPaperScissorsFactory.sol",
       "solcConfig": {
         "version": "0.8.0",

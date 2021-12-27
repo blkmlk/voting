@@ -1,17 +1,17 @@
 <template>
-<v-container>
+<v-container v-if="connected">
     <v-app-bar absolute color="white">
       <v-btn v-if="canGoBack" @click="goBack" class="mx-2 text-center" dark color="#F5F5F5">
         <v-icon dark color="#212121"> mdi-arrow-left-bold </v-icon>
       </v-btn>
       <v-toolbar-title class="ml-5 black--text">
-          {{name}}
+          {{contractInfo.name}}
         </v-toolbar-title>
       <v-spacer></v-spacer>
     </v-app-bar>
     <v-row justify="center">
             <v-container fill-height>
-                <v-row v-if="started" align="center" justify="center" class="mb-5">
+                <v-row v-if="canMove" align="center" justify="center" class="mb-5">
                   <v-btn class="mx-2 text-center" dark color="indigo" @click="makeMove('rock')">
                     <v-icon dark> mdi-diamond-stone </v-icon>
                   </v-btn>
@@ -24,10 +24,10 @@
                 </v-row>
                 <v-row align="center" justify="center">
                   <v-btn v-if="canJoin" class="mx-2 text-center" dark color="indigo" @click="join">Join</v-btn>
-                  <div v-else-if="canLeave" >
-                    <v-btn v-if="!accepted" class="mx-2 text-center" dark color="green" @click="play">Play</v-btn>
-                    <v-btn class="mx-2 text-center" dark color="red" @click="leave">Leave</v-btn>
-                  </div>
+                  <v-btn v-else-if="canLeave" class="mx-2 text-center" dark color="red" @click="leave">Leave</v-btn>
+                  <v-btn v-else-if="canPlay" class="mx-2 text-center" dark color="purple" @click="play">Play</v-btn>
+                  <v-btn v-else-if="canFinish" class="mx-2 text-center" dark color="green" @click="finish">Finish</v-btn>
+                  <v-btn v-else-if="finished" class="mx-2 text-center" dark color="green">Finished</v-btn>
                 </v-row>
             </v-container>
     </v-row>
@@ -45,6 +45,16 @@ const Moves = {
   Scissors: 3
 }
 
+const Status = {
+  Viewer: 0,
+  Joined: 1,
+  Approved: 2,
+  Playing: 3,
+  Moved: 4,
+  Finishing: 5,
+  Finished: 6,
+}
+
 export default {
   created() {
     this.address = this.$route.params.address;
@@ -53,27 +63,37 @@ export default {
     this.$connect('ws://localhost:8090/ws', {format: 'json'})
     this.$socket.onopen = this.onWsConnect;
     this.$socket.onmessage = this.onWsMessage;
+
+    this.timeInterval = setInterval(function (){
+      this.currentTimestamp = parseInt(Date.now()/1000);
+    }.bind(this), 1000);
+
+    this.checkContract();
   },
   beforeDestroy() {
     this.$disconnect();
+    clearInterval(this.timeInterval);
   },
   props: ["info"],
   data() {
     return {
-      name: "",
       address: "",
+      timeInterval: null,
+      currentTimestamp: parseInt(Date.now()/1000),
       contract: null,
-      contractInfo: null,
-      freeSpots: 0,
-      contractOwner: null,
+      contractInfo: {
+        name: "",
+        owner: null,
+        bet: 0,
+        freeSpots: 0,
+        expiresAt: 0,
+        winner: "",
+      },
       generator: null,
-      joined: false,
-      accepted: false,
-      started: false,
+      status: Status.Viewer,
       moves: null,
       gameID: 0,
       players: [],
-      wsConnection: null,
     }
   },
   computed: {
@@ -81,23 +101,27 @@ export default {
       return window.prevUrl !== "/";
     },
     canJoin() {
-      if (this.contract == null || this.freeSpots <= 0) {
-        return false;
-      }
-      return !this.joined;
+      console.log(this.contractInfo);
+      return this.contractInfo.freeSpots > 0 && this.status === Status.Viewer && this.currentTimestamp <= this.contractInfo.expiresAt;
     },
     canLeave() {
-      if (this.contract == null) {
-        return false;
-      }
-
-      return this.joined;
+      return this.status === Status.Joined &&
+          (this.contractInfo.freeSpots > 0 || (this.currentTimestamp > this.contractInfo.expiresAt && !this.finished));
     },
-    canBeFinished() {
-      return this.moves !== null;
+    canPlay() {
+      return this.status === Status.Joined;
+    },
+    canMove() {
+      return this.status === Status.Playing;
+    },
+    canFinish() {
+      return this.status === Status.Finishing && this.moves !== null;
+    },
+    finished() {
+      return this.status === Status.Finished;
     },
     connected() {
-      return this.$store.state.ethers != null && this.wsConnection !== null;
+      return this.$store.state.ethers != null && this.contract !== null;
     },
     newBlock() {
       return this.$store.state.newBlock;
@@ -119,20 +143,22 @@ export default {
     onWsMessage(event) {
       let msg = JSON.parse(event.data);
       switch (msg.type) {
-        case 'ACCEPTED':
-          this.accepted = true;
-          this.started = false;
+        case 'APPROVED':
+          this.status = Status.Approved;
           break;
         case 'START':
-          this.started = true;
+          this.status = Status.Playing;
           this.gameID = msg.gameID;
           console.log("Started with Game ID:", msg.gameID);
           break;
+        case 'MOVED':
+          this.status = Status.Moved;
+          break;
         case 'STOP':
-          this.accepted = false;
-          this.started = false;
+          this.status = Status.Viewer;
           break;
         case 'FINISH':
+          this.status = Status.Finishing;
           this.moves = msg.moves;
           console.log("Got moves", msg.moves);
           break;
@@ -144,8 +170,6 @@ export default {
     leave() {
       this.contract.leave().then(function () {
         this.$disconnect();
-        this.accepted = false;
-        this.started = false;
       }.bind(this));
     },
     play() {
@@ -160,6 +184,9 @@ export default {
           gameAddress: this.address,
         })
       }.bind(this))
+    },
+    finish() {
+      this.contract.finish(this.moves);
     },
     makeMove(value) {
       let move = 0;
@@ -191,17 +218,32 @@ export default {
     },
     loadContractInfo(instance) {
       instance.getInfo().then(function(info){
-        this.contractInfo = info;
-        this.name = info.name;
-        this.contractOwner = info.owner;
+        this.contractInfo.name = info.name;
+        this.contractInfo.owner = info.owner;
+        this.contractInfo.bet = info.bet;
       }.bind(this))
 
       instance.freeSpots().then(function (value) {
-        this.freeSpots = value;
+        this.contractInfo.freeSpots = value;
       }.bind(this));
 
       instance.players(this.account).then(function(player) {
-        this.joined = player.exists;
+        if (player.exists) {
+          this.status = Status.Joined;
+        } else {
+          this.status = Status.Viewer;
+        }
+      }.bind(this))
+
+      instance.expiresAt().then(function (value) {
+        this.contractInfo.expiresAt = value;
+      }.bind(this))
+
+      instance.winner().then(function (value) {
+        this.contractInfo.winner = value;
+        if (value !== "") {
+          this.status = Status.Finished;
+        }
       }.bind(this))
 
       instance.startBlock().then(async function(blockNumber) {
@@ -246,6 +288,9 @@ export default {
       this.checkContract();
     },
     contract(instance) {
+      if (instance === null) {
+        return;
+      }
       this.loadContractInfo(instance);
     },
   }

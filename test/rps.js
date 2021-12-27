@@ -35,7 +35,7 @@ describe("RockPaperScissors", function () {
                 accounts = await ethers.getSigners();
 
                 RPS = await ethers.getContractFactory("RockPaperScissors");
-                contract = await RPS.connect(accounts[0]).deploy("test", accounts[0].address, bet);
+                contract = await RPS.connect(accounts[0]).deploy("test", accounts[0].address, bet, 10*60);
                 await contract.deployed();
                 await contract.connect(accounts[0]).join({value: bet});
             })
@@ -49,20 +49,15 @@ describe("RockPaperScissors", function () {
                 });
             })
 
+            it("should leave", async () => {
+                await contract.connect(accounts[0]).leave();
+                await contract.connect(accounts[0]).join({value: bet});
+            })
+
             it("should join", async () => {
                 await contract.connect(accounts[1]).join({value: bet});
 
                 assert.isTrue((await contract.queryFilter(contract.filters.Started())).length === 1);
-            })
-
-            it("should leave", async () => {
-                await contract.connect(accounts[1]).leave();
-            })
-
-            it("should join again", async () => {
-                await contract.connect(accounts[1]).join({value: bet});
-
-                assert.isTrue((await contract.queryFilter(contract.filters.Started())).length === 2);
             })
 
             it("should be started", async () => {
