@@ -18,43 +18,15 @@ let players = {};
 
 wsServer.on('connection', (conn, req) => {
     let remote = req.socket.remoteAddress + ":" + req.socket.remotePort;
-    console.log("Connected", remote);
 
     conn.on('message', async message => {
         let msg = JSON.parse(message.toString());
 
         switch (msg.type) {
-            case 'PLAY':
-                if (!handlePlay(msg)) {
-                    return;
-                }
-
+            case 'CONNECT': {
                 if (players.hasOwnProperty(remote)) {
                     console.log(msg.address, "is already connected");
                     return;
-                }
-
-                if (!games.hasOwnProperty(msg.gameAddress)) {
-                    initGame(msg.gameAddress);
-                }
-
-                if (games[msg.gameAddress].players === 2) {
-                    console.log("no free spots")
-                    return;
-                }
-
-                let failed = false;
-                let player = await games[msg.gameAddress].contract.players(msg.address).catch(exp => {
-                    failed = true
-                });
-
-                if (failed) {
-                    console.log("wrong contract");
-                    return;
-                }
-
-                if (!player.exists) {
-                    console.log("player doesn't exist");
                 }
 
                 players[remote] = {
@@ -62,72 +34,120 @@ wsServer.on('connection', (conn, req) => {
                     address: msg.address,
                     gameAddress: msg.gameAddress,
                     move: null,
+                    verified: false,
                 }
 
-                console.log("Connected", msg.address.toString())
+                if (!games.hasOwnProperty(msg.gameAddress)) {
+                    initGame(msg.gameAddress);
+                }
+
+                let failed = false;
+                let cPlayer = await games[msg.gameAddress].contract.players(msg.address).catch(exp => {
+                    failed = true
+                });
+
+                if (failed) {
+                    console.log("wrong game address");
+                    deletePlayer(remote);
+                    return;
+                }
+
+                if (!cPlayer.exists) {
+                    console.log("player doesn't exist");
+                    deletePlayer(remote);
+                    return;
+                }
 
                 let game = games[msg.gameAddress];
 
-                game.players++;
                 game.clients.push(remote);
 
-                conn.send(JSON.stringify({type: 'APPROVED'}))
+                conn.send(JSON.stringify({type: "CONNECTED", address: msg.address}))
+                console.log("Connected", msg.address.toString())
 
-                if (game.players === 2) {
-                    game.clients.forEach(remote => {
-                        let player = players[remote];
-                        player.gameID = game.id;
-                        player.conn.send(JSON.stringify({
-                            type: 'START',
-                            gameID: game.id,
-                        }))
-                    });
+                break;
+            }
+            case 'READY': {
+                let player = getPlayer(remote);
 
-                    console.log("Started with Game ID:", game.id)
+                if (player === null) {
+                    console.log(msg.address, "player not found");
                     return;
                 }
+
+                if (!verifyAddress(player.address, msg.nonce, msg.signature)) {
+                    console.log("player isn't verified");
+                    deletePlayer(remote);
+                    return;
+                }
+
+                player.verified = true;
+
+                if (games[player.gameAddress].players === 2) {
+                    console.log("no free spots")
+                    return;
+                }
+
+                let game = games[player.gameAddress];
+                game.players++;
+
+                sendToAll(player.gameAddress, {type: "APPROVED", address: player.address})
+
+                if (game.players === 2) {
+                    sendToAll(player.gameAddress, {type: 'START', gameID: game.id});
+                    console.log("Started with Game ID:", game.id)
+                }
                 break;
-            case 'MOVE':
-                let p = players[remote];
-                if (p.move !== null) {
+            }
+            case 'MOVE': {
+                let player = getPlayer(remote);
+
+                if (player === null) {
+                    console.log(msg.address, "player not found");
+                    return;
+                }
+
+                if (!player.verified) {
+                    console.log("player isn't verified")
+                    return;
+                }
+
+                if (player.move !== null) {
                     console.log("player already made a move")
                     return;
                 }
 
-                p.move = {
-                    from: p.address,
+                player.move = {
+                    from: player.address,
                     nonce: msg.nonce,
                     move: msg.move,
-                    gameID: p.gameID,
+                    gameID: player.gameID,
                     signature: msg.signature,
                 }
-                games[p.gameAddress].moves++;
-                p.conn.send(JSON.stringify({type: 'MOVED'}))
+                games[player.gameAddress].moves++;
 
-                if (games[p.gameAddress].moves === 2) {
+                sendToAll(player.gameAddress, {type: 'MOVED', address: player.address})
+
+                if (games[player.gameAddress].moves === 2) {
                     let moves = [];
-                    games[p.gameAddress].clients.forEach(addr => {
+                    games[player.gameAddress].clients.forEach(addr => {
                         moves.push(players[addr].move);
                     })
 
-                    games[p.gameAddress].clients.forEach(addr => {
-                        players[addr].conn.send(JSON.stringify({
-                            type: 'FINISH',
-                            moves: moves,
-                        }))
-                    })
+                    sendToAll(player.gameAddress, {type: 'FINISH', moves: moves})
                     console.log("The game can be finished")
                 }
                 break;
             }
+        }
     })
     conn.on('close', () => {
-        let player = players[remote];
+        let player = getPlayer(remote);
 
-        if (player !== undefined) {
+        if (player !== null) {
             games[player.gameAddress].clients.forEach(addr => {
-                players[addr].conn.send(JSON.stringify({type: 'STOP'}))
-                delete players[addr];
+                players[addr].conn.send(JSON.stringify({type: 'STOP', address: player.address}))
+                deletePlayer(addr);
             })
             initGame(player.gameAddress);
             console.log("Disconnected", remote);
@@ -135,11 +155,7 @@ wsServer.on('connection', (conn, req) => {
     })
 })
 
-function handlePlay(msg) {
-    let address = msg.address;
-    let signature = msg.signature;
-    let nonce = msg.nonce;
-
+function verifyAddress(address, nonce, signature) {
     let message = ethers.utils.solidityKeccak256(['uint256', 'address'], [nonce, address]);
     let hashed = ethers.utils.arrayify(message);
     let recovered = ethers.utils.verifyMessage(hashed, signature);
@@ -167,8 +183,32 @@ function initGame(address) {
     };
 }
 
-function generateAddress(provider) {
-    let id = crypto.randomBytes(32).toString('hex');
-    let privateKey = "0x"+id;
-    return new ethers.Wallet(privateKey, provider);
+function sendToAll(gameAddress, obj) {
+    let game = games[gameAddress];
+
+    game.clients.forEach(remote => {
+        let player = players[remote];
+        player.gameID = game.id;
+        player.conn.send(JSON.stringify(obj))
+    });
+}
+
+function deletePlayer(remote) {
+    let player = players[remote];
+    if (games.hasOwnProperty(player.gameAddress)) {
+        games[player.gameAddress].players--;
+        games[player.gameAddress].clients = games[player.gameAddress].clients.filter(item => {
+            return item !== remote;
+        })
+    }
+
+    delete players[remote];
+}
+
+function getPlayer(remote) {
+    if (!players.hasOwnProperty(remote)) {
+        return null;
+    }
+
+    return players[remote];
 }
