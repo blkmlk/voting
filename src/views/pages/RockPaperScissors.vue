@@ -6,13 +6,14 @@
       </v-btn>
       <v-toolbar-title class="ml-5 black--text">
         {{contractInfo.name}}
+        {{status}}
       </v-toolbar-title>
       <v-spacer></v-spacer>
     </v-app-bar>
     <v-row justify="center">
             <v-container fill-height>
               <v-row justify="center">
-                  <v-card v-for="player in players" class="top-card mr-10 ml-10 mb-10">
+                  <v-card v-for="player in playersList" class="top-card mr-10 ml-10 mb-10">
                     <v-container>
                       <v-row justify="center" class="mb-10">
                         <img
@@ -26,7 +27,7 @@
                         <h4 class="mt-2 mb-2 title blue-grey--text text--darken-2 font-weight-regular">{{player.address}}</h4>
                       </v-row>
                       <v-row justify="center">
-                        <h4 class="mt-2 mb-2 title black--text text--darken-2 font-weight-regular">{{player.status}}</h4>
+                        <h4 class="mt-2 mb-2 title black--text text--darken-2 font-weight-regular">{{getStatus(player.status)}}</h4>
                       </v-row>
                     </v-container>
                   </v-card>
@@ -49,7 +50,6 @@
                     <v-btn class="mx-2 text-center" dark color="purple" @click="ready">Ready</v-btn>
                   </div>
                   <v-btn v-else-if="canFinish" class="mx-2 text-center" dark color="green" @click="finish">Finish</v-btn>
-                  <v-btn v-else-if="finished" class="mx-2 text-center" dark color="green">Finished</v-btn>
                 </v-row>
             </v-container>
     </v-row>
@@ -112,11 +112,9 @@ export default {
         winner: "",
       },
       generator: null,
-      status: Status.Viewer,
-      rivalStatus: Status.Joined,
       moves: null,
       gameID: 0,
-      players: [],
+      players: {},
     }
   },
   computed: {
@@ -134,7 +132,7 @@ export default {
           (this.contractInfo.freeSpots > 0 || (this.expired && !this.finished));
     },
     canBeReady() {
-      return this.status === Status.Joined;
+      return this.status === Status.Joined && this.winner === "";
     },
     canMove() {
       return this.status === Status.Playing;
@@ -157,7 +155,21 @@ export default {
       }
       return this.$store.state.accounts[0];
     },
+    status() {
+      if (!this.players.hasOwnProperty(this.account)) {
+        return Status.Viewer;
+      }
+      return this.players[this.account].status;
+    },
+    playersList() {
+      return Object.entries(this.players).map(item => {
+        return item[1];
+      });
+    },
     winner() {
+      if (parseInt(this.contractInfo.winner, 16) === 0) {
+        return "";
+      }
       return this.contractInfo.winner;
     },
   },
@@ -167,8 +179,6 @@ export default {
     },
     getStatus(status) {
       switch (status) {
-        case Status.Viewer: return "Viewer";
-        case Status.Joined: return "Joined";
         case Status.Approved: return "Ready";
         case Status.Playing: return "Choosing";
         case Status.Moved: return "Made a move";
@@ -185,36 +195,38 @@ export default {
     },
     onWsMessage(event) {
       let msg = JSON.parse(event.data);
+      let address = msg.address;
 
-      let newStatus = "";
+      let status = "";
       switch (msg.type) {
         case 'CONNECTED':
-          newStatus = Status.Joined;
+          status = Status.Joined;
           break;
         case 'APPROVED':
-          newStatus = Status.Approved;
+          status = Status.Approved;
           break;
         case 'START':
-          newStatus = Status.Playing;
+          status = Status.Playing;
+          address = 'all';
           this.gameID = msg.gameID;
           console.log("Started game with ID:", msg.gameID);
           break;
         case 'MOVED':
-          newStatus = Status.Moved;
+          status = Status.Moved;
           break;
         case 'FINISH':
-          newStatus = Status.Finishing;
+          status = Status.Finishing;
+          address = 'all';
           this.moves = msg.moves;
           break;
         case 'STOP':
-          newStatus = Status.Joined;
+          status = Status.Joined;
+          address = 'all';
           break;
       }
+      console.log(msg, address, status);
 
-      if (msg.address === undefined || msg.address === this.account) {
-        this.status = newStatus;
-      }
-      this.setPlayerStatus(msg.address, newStatus);
+      this.setPlayerStatus(address, status);
     },
     join() {
       this.contract.join({value: this.contractInfo.bet});
@@ -238,10 +250,9 @@ export default {
     finish() {
       this.contract.finish(this.moves).catch(function(exp) {
         if (exp.toString().match(/draw/)) {
-          this.status = Status.Joined;
-          this.players.forEach(item => {
-            item.status = this.getStatus(Status.Joined);
-          })
+          Object.keys(this.players).forEach(function(address) {
+            this.players[address].status = Status.Joined;
+          }.bind(this))
         }
       });
     },
@@ -275,13 +286,17 @@ export default {
       return this.generator.generateRandomAvatar(seed);
     },
     setPlayerStatus(address, status) {
-      let player = this.players.find(item => {
-        return item.address === address;
-      })
-
-      if (player !== undefined) {
-        player.status = this.getStatus(status);
+      if (address === 'all') {
+        Object.keys(this.players).forEach(function(addr) {
+          this.players[addr].status = status;
+        }.bind(this))
+        return;
       }
+
+      if (!this.players.hasOwnProperty(address)) {
+        return;
+      }
+      this.players[address].status = status;
     },
     loadContractInfo(instance) {
       instance.getInfo().then(function(info){
@@ -294,41 +309,20 @@ export default {
         let events = await instance.queryFilter([[topicJoined, topicLeft]], info.startBlock.toNumber());
 
         let players = {};
-        events.forEach(e => {
+        events.forEach(function(e) {
           if (e.topics[0] === topicJoined.topics[0]) {
-            players[e.args[0]] = true;
-          } else if (e.topics[0] === topicLeft.topics[0]){
+            players[e.args[0]] = {
+              address: e.args[0],
+              status: Status.Joined,
+            };
+          } else if (e.topics[0] === topicLeft.topics[0]) {
             delete players[e.args[0]];
           }
-        })
-
-        let newPlayers = [];
-        Object.keys(players).forEach(function(key) {
-          let status = Status.Joined;
-
-          if (parseInt(info.winner, 16) !== 0) {
-            if (key === info.winner) {
-              status = Status.Finished;
-              this.status = Status.Finished;
-            } else {
-              status = "";
-            }
-          }
-
-          newPlayers.push({
-            address: key,
-            status: this.getStatus(status),
-          })
-        }.bind(this));
-        this.players = newPlayers;
-      }.bind(this))
-
-      instance.players(this.account).then(function(player) {
-        if (player.exists) {
-          this.status = Status.Joined;
-        } else {
-          this.status = Status.Viewer;
+        }.bind(this))
+        if (parseInt(info.winner) > 0) {
+          players[info.winner].status = Status.Finished;
         }
+        this.players = players;
       }.bind(this))
     },
     checkContract() {
