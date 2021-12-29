@@ -72,8 +72,8 @@
       ]
     },
     "/Users/id/devel/voting/contracts/RockPaperScissors.sol": {
-      "lastModificationDate": 1640539202254,
-      "contentHash": "94d13a3394990e19c8e9169bb82c4e46",
+      "lastModificationDate": 1640710309013,
+      "contentHash": "0d49c4550fca35723616f9f5e709cf80",
       "sourceName": "contracts/RockPaperScissors.sol",
       "solcConfig": {
         "version": "0.8.0",

@@ -41,23 +41,6 @@ wsServer.on('connection', (conn, req) => {
                     initGame(msg.gameAddress);
                 }
 
-                let failed = false;
-                let cPlayer = await games[msg.gameAddress].contract.players(msg.address).catch(exp => {
-                    failed = true
-                });
-
-                if (failed) {
-                    console.log("wrong game address");
-                    deletePlayer(remote);
-                    return;
-                }
-
-                if (!cPlayer.exists) {
-                    console.log("player doesn't exist");
-                    deletePlayer(remote);
-                    return;
-                }
-
                 let game = games[msg.gameAddress];
 
                 game.clients.push(remote);
@@ -82,6 +65,23 @@ wsServer.on('connection', (conn, req) => {
                 }
 
                 player.verified = true;
+
+                let failed = false;
+                let cPlayer = await games[player.gameAddress].contract.players(player.address).catch(exp => {
+                    failed = true
+                });
+
+                if (failed) {
+                    console.log("wrong game address");
+                    deletePlayer(remote);
+                    return;
+                }
+
+                if (!cPlayer.exists) {
+                    console.log("player doesn't exist");
+                    deletePlayer(remote);
+                    return;
+                }
 
                 if (games[player.gameAddress].players === 2) {
                     console.log("no free spots")

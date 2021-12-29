@@ -5,9 +5,8 @@
         <v-icon dark color="#212121"> mdi-arrow-left-bold </v-icon>
       </v-btn>
       <v-toolbar-title class="ml-5 black--text">
-          {{contractInfo.name}}
-          {{status}}
-        </v-toolbar-title>
+        {{contractInfo.name}}
+      </v-toolbar-title>
       <v-spacer></v-spacer>
     </v-app-bar>
     <v-row justify="center">
@@ -147,7 +146,7 @@ export default {
       return this.status === Status.Finished;
     },
     connected() {
-      return this.$store.state.ethers != null && this.contract !== null;
+      return this.$store.state.ethers != null && this.contract !== null && this.account !== undefined;
     },
     newBlock() {
       return this.$store.state.newBlock;
@@ -157,6 +156,9 @@ export default {
         return null;
       }
       return this.$store.state.accounts[0];
+    },
+    winner() {
+      return this.contractInfo.winner;
     },
   },
   methods: {
@@ -171,6 +173,7 @@ export default {
         case Status.Playing: return "Choosing";
         case Status.Moved: return "Made a move";
         case Status.Finishing: return "Finished";
+        case Status.Finished: return "Winner!";
       }
     },
     onWsConnect(conn) {
@@ -182,7 +185,6 @@ export default {
     },
     onWsMessage(event) {
       let msg = JSON.parse(event.data);
-      console.log(msg);
 
       let newStatus = "";
       switch (msg.type) {
@@ -195,7 +197,7 @@ export default {
         case 'START':
           newStatus = Status.Playing;
           this.gameID = msg.gameID;
-          console.log("Started with Game ID:", msg.gameID);
+          console.log("Started game with ID:", msg.gameID);
           break;
         case 'MOVED':
           newStatus = Status.Moved;
@@ -203,7 +205,6 @@ export default {
         case 'FINISH':
           newStatus = Status.Finishing;
           this.moves = msg.moves;
-          console.log("Got moves", msg.moves);
           break;
         case 'STOP':
           newStatus = Status.Joined;
@@ -213,14 +214,7 @@ export default {
       if (msg.address === undefined || msg.address === this.account) {
         this.status = newStatus;
       }
-
-      let player = this.players.find(item => {
-        return item.address === msg.address;
-      })
-
-      if (player !== undefined) {
-        player.status = this.getStatus(newStatus);
-      }
+      this.setPlayerStatus(msg.address, newStatus);
     },
     join() {
       this.contract.join({value: this.contractInfo.bet});
@@ -242,7 +236,14 @@ export default {
       }.bind(this))
     },
     finish() {
-      this.contract.finish(this.moves);
+      this.contract.finish(this.moves).catch(function(exp) {
+        if (exp.toString().match(/draw/)) {
+          this.status = Status.Joined;
+          this.players.forEach(item => {
+            item.status = this.getStatus(Status.Joined);
+          })
+        }
+      });
     },
     withdraw() {
       this.contract.withdraw();
@@ -273,41 +274,24 @@ export default {
     getAvatar(seed) {
       return this.generator.generateRandomAvatar(seed);
     },
+    setPlayerStatus(address, status) {
+      let player = this.players.find(item => {
+        return item.address === address;
+      })
+
+      if (player !== undefined) {
+        player.status = this.getStatus(status);
+      }
+    },
     loadContractInfo(instance) {
       instance.getInfo().then(function(info){
-        this.contractInfo.name = info.name;
-        this.contractInfo.owner = info.owner;
-        this.contractInfo.bet = info.bet;
-      }.bind(this))
-
-      instance.freeSpots().then(function (value) {
-        this.contractInfo.freeSpots = value;
-      }.bind(this));
-
-      instance.players(this.account).then(function(player) {
-        if (player.exists) {
-          this.status = Status.Joined;
-        } else {
-          this.status = Status.Viewer;
-        }
-      }.bind(this))
-
-      instance.expiresAt().then(function (value) {
-        this.contractInfo.expiresAt = value;
-      }.bind(this))
-
-      instance.winner().then(function (value) {
-        this.contractInfo.winner = value;
-        if (parseInt(value, 16) !== 0) {
-          this.status = Status.Finished;
-        }
-      }.bind(this))
-
-      instance.startBlock().then(async function(blockNumber) {
+        this.contractInfo = info;
+        return info;
+      }.bind(this)).then(async function(info) {
         let topicJoined = instance.filters.Joined(null);
         let topicLeft = instance.filters.Left(null);
 
-        let events = await instance.queryFilter([[topicJoined, topicLeft]], blockNumber.toNumber());
+        let events = await instance.queryFilter([[topicJoined, topicLeft]], info.startBlock.toNumber());
 
         let players = {};
         events.forEach(e => {
@@ -317,14 +301,34 @@ export default {
             delete players[e.args[0]];
           }
         })
+
         let newPlayers = [];
         Object.keys(players).forEach(function(key) {
+          let status = Status.Joined;
+
+          if (parseInt(info.winner, 16) !== 0) {
+            if (key === info.winner) {
+              status = Status.Finished;
+              this.status = Status.Finished;
+            } else {
+              status = "";
+            }
+          }
+
           newPlayers.push({
             address: key,
-            status: this.getStatus(Status.Joined),
+            status: this.getStatus(status),
           })
         }.bind(this));
         this.players = newPlayers;
+      }.bind(this))
+
+      instance.players(this.account).then(function(player) {
+        if (player.exists) {
+          this.status = Status.Joined;
+        } else {
+          this.status = Status.Viewer;
+        }
       }.bind(this))
     },
     checkContract() {

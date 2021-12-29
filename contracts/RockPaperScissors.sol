@@ -25,7 +25,11 @@ struct PlayerMove {
 struct RPSInfo {
     string name;
     address owner;
+    address winner;
     uint256 bet;
+    uint8 freeSpots;
+    uint256 startBlock;
+    uint256 expiresAt;
 }
 
 contract RockPaperScissors {
@@ -64,7 +68,11 @@ contract RockPaperScissors {
         return RPSInfo({
             name: name,
             owner: owner,
-            bet: bet
+            bet: bet,
+            winner: winner,
+            freeSpots: freeSpots,
+            startBlock: startBlock,
+            expiresAt: expiresAt
         });
     }
 
