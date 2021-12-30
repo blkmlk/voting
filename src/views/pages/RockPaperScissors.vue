@@ -74,7 +74,7 @@ const Status = {
   Playing: 4,
   Moved: 5,
   Finishing: 6,
-  Finished: 7,
+  Won: 7,
 }
 
 export default {
@@ -141,7 +141,7 @@ export default {
       return this.status === Status.Finishing && this.moves !== null;
     },
     finished() {
-      return this.status === Status.Finished;
+      return this.status === Status.Won;
     },
     connected() {
       return this.$store.state.ethers != null && this.contract !== null && this.account !== undefined;
@@ -182,8 +182,8 @@ export default {
         case Status.Approved: return "Ready";
         case Status.Playing: return "Choosing";
         case Status.Moved: return "Made a move";
-        case Status.Finishing: return "Finished";
-        case Status.Finished: return "Winner!";
+        case Status.Finishing: return "Finishing";
+        case Status.Won: return "Winner!";
       }
     },
     onWsConnect(conn) {
@@ -247,8 +247,8 @@ export default {
         })
       }.bind(this))
     },
-    finish() {
-      this.contract.finish(this.moves).catch(function(exp) {
+    async finish() {
+      await this.contract.finish(this.moves).catch(function(exp) {
         if (exp.toString().match(/draw/)) {
           Object.keys(this.players).forEach(function(address) {
             this.players[address].status = Status.Joined;
@@ -320,7 +320,7 @@ export default {
           }
         }.bind(this))
         if (parseInt(info.winner) > 0) {
-          players[info.winner].status = Status.Finished;
+          players[info.winner].status = Status.Won;
         }
         this.players = players;
       }.bind(this))
