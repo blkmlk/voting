@@ -6,7 +6,6 @@
       </v-btn>
       <v-toolbar-title class="ml-5 black--text">
         {{contractInfo.name}}
-        {{status}}
         {{contractExpiresIn}}
       </v-toolbar-title>
       <v-spacer></v-spacer>
@@ -33,7 +32,13 @@
                     </v-container>
                   </v-card>
               </v-row>
-                <v-row v-if="canMove" align="center" justify="center" class="mb-5">
+              <v-row align="center" justify="center">
+                <v-btn v-if="canJoin" class="mx-2 text-center" dark color="indigo" @click="join">Join</v-btn>
+                <v-btn v-else-if="canLeave" class="mx-2 text-center" dark color="red" @click="leave">Leave</v-btn>
+                <div v-else-if="canBeReady">
+                  <v-btn class="mx-2 text-center" dark color="purple" @click="ready">Ready</v-btn>
+                </div>
+                <div v-else-if="canMove">
                   <v-btn class="mx-2 text-center" dark color="indigo" @click="makeMove('rock')">
                     <v-icon dark> mdi-diamond-stone </v-icon>
                   </v-btn>
@@ -43,15 +48,9 @@
                   <v-btn class="mx-2 text-center" dark color="indigo" @click="makeMove('scissors')">
                     <v-icon dark> mdi-content-cut </v-icon>
                   </v-btn>
-                </v-row>
-                <v-row align="center" justify="center">
-                  <v-btn v-if="canJoin" class="mx-2 text-center" dark color="indigo" @click="join">Join</v-btn>
-                  <v-btn v-else-if="canLeave" class="mx-2 text-center" dark color="red" @click="leave">Leave</v-btn>
-                  <div v-else-if="canBeReady">
-                    <v-btn class="mx-2 text-center" dark color="purple" @click="ready">Ready</v-btn>
-                  </div>
-                  <v-btn v-else-if="canFinish" class="mx-2 text-center" dark color="green" @click="finish">Finish</v-btn>
-                </v-row>
+                </div>
+                <v-btn v-else-if="canFinish" class="mx-2 text-center" dark color="green" @click="finish">Finish</v-btn>
+              </v-row>
             </v-container>
     </v-row>
 </v-container>
@@ -72,6 +71,7 @@ const Moves = {
 const Status = {
   Viewer: 0,
   Joined: 1,
+  Draw: 2,
   Approved: 3,
   Playing: 4,
   Moved: 5,
@@ -134,7 +134,7 @@ export default {
           (this.contractInfo.freeSpots > 0 || (this.expired && !this.finished));
     },
     canBeReady() {
-      return this.status === Status.Joined && this.winner === "";
+      return (this.status === Status.Joined || this.status === Status.Draw) && this.winner === "";
     },
     canMove() {
       return this.status === Status.Playing;
@@ -188,6 +188,7 @@ export default {
     },
     getStatus(status) {
       switch (status) {
+        case Status.Draw: return "Draw";
         case Status.Approved: return "Ready";
         case Status.Playing: return "Choosing";
         case Status.Moved: return "Made a move";
@@ -256,14 +257,14 @@ export default {
         })
       }.bind(this))
     },
-    async finish() {
-      await this.contract.finish(this.moves).catch(function(exp) {
-        if (exp.toString().match(/draw/)) {
+    finish() {
+      this.contract.finish(this.moves).catch(function(exp) {
+        if (exp.data.message.match(/draw/)) {
           Object.keys(this.players).forEach(function(address) {
-            this.players[address].status = Status.Joined;
+            this.players[address].status = Status.Draw;
           }.bind(this))
         }
-      });
+      }.bind(this));
     },
     withdraw() {
       this.contract.withdraw();
