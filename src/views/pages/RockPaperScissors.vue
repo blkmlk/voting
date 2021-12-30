@@ -7,6 +7,7 @@
       <v-toolbar-title class="ml-5 black--text">
         {{contractInfo.name}}
         {{status}}
+        {{contractExpiresIn}}
       </v-toolbar-title>
       <v-spacer></v-spacer>
     </v-app-bar>
@@ -60,6 +61,7 @@
 
 const ethers = require("ethers");
 import {AvatarGenerator} from 'random-avatar-generator';
+import {getRemainingTime} from "@/helpers";
 
 const Moves = {
   Rock: 1,
@@ -172,6 +174,13 @@ export default {
       }
       return this.contractInfo.winner;
     },
+    contractExpiresIn() {
+      if (this.currentTimestamp > this.contractInfo.expiresAt) {
+        return "expired";
+      }
+
+      return "expires in " + getRemainingTime(this.contractInfo.expiresAt, this.currentTimestamp);
+    }
   },
   methods: {
     goBack() {
