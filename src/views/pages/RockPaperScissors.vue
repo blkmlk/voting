@@ -30,7 +30,7 @@
                         />
                       </v-row>
                       <v-row class="ml-2 mr-2" justify="center">
-                        <h4 class="mt-2 mb-2 title blue-grey--text text--darken-2 font-weight-regular">{{player.address}}</h4>
+                        <h4 class="text-target mt-2 mb-2 blue-grey--text text--darken-2 font-weight-regular">{{player.address}}</h4>
                       </v-row>
                       <v-row justify="center">
                         <h4 class="mt-2 mb-2 title black--text text--darken-2 font-weight-regular">{{getStatus(player.status)}}</h4>
@@ -393,3 +393,8 @@ export default {
   }
 }
 </script>
+<style>
+.text-target {
+  font-size: 15px
+}
+</style>
