@@ -3,7 +3,7 @@ const ethers = require("ethers");
 const crypto = require('crypto');
 
 const config = require('./config.js');
-const info = require('@/artifacts/info.json');
+const info = require('../src/artifacts/info.json');
 
 const provider = new ethers.providers.JsonRpcProvider(config.url, "any");
 
