@@ -2,7 +2,7 @@ import Vue from 'vue'
 import Router from 'vue-router'
 
 Vue.use(Router)
-const info = require('./info.json')
+const info = require('./artifacts/info.json')
 
 let router = new Router({
     mode: 'hash',

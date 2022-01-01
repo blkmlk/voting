@@ -23,4 +23,5 @@ yarn-error.log*
 # hardhat
 artifacts
 cache
-src/info.json
+src/artifacts
+src/contracts

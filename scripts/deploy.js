@@ -19,7 +19,7 @@ async function main() {
     const cfArtifact = await hardhat.artifacts.readArtifact("Crowdfunding");
     const rpsArtifact = await hardhat.artifacts.readArtifact("RockPaperScissors");
 
-    await fs.writeFileSync("./src/info.json", JSON.stringify({
+    await fs.writeFileSync("./src/artifacts/info.json", JSON.stringify({
         ElectionFactory: {
             address: electionFactory.address,
             abi: eFactoryArtifact.abi,
