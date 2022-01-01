@@ -74,7 +74,7 @@ const Status = {
   Joined: 1,
   Draw: 2,
   Approved: 3,
-  Playing: 4,
+  Started: 4,
   Moved: 5,
   Finishing: 6,
   Won: 7,
@@ -137,7 +137,7 @@ export default {
       return (this.status === Status.Joined || this.status === Status.Draw) && this.winner === "";
     },
     canMove() {
-      return this.status === Status.Playing;
+      return this.status === Status.Started;
     },
     canFinish() {
       return this.status === Status.Finishing && this.moves !== null;
@@ -207,7 +207,7 @@ export default {
       switch (status) {
         case Status.Draw: return "Draw";
         case Status.Approved: return "Ready";
-        case Status.Playing: return "Choosing";
+        case Status.Started: return "Choosing";
         case Status.Moved: return "Made a move";
         case Status.Finishing: return "Finishing";
         case Status.Won: return "Winner!";
@@ -219,6 +219,7 @@ export default {
         address: this.account,
         gameAddress: this.address,
       })
+      console.log("Successfully connected to ws server");
     },
     onWsMessage(event) {
       let msg = JSON.parse(event.data);
@@ -232,8 +233,8 @@ export default {
         case 'APPROVED':
           status = Status.Approved;
           break;
-        case 'START':
-          status = Status.Playing;
+        case 'STARTED':
+          status = Status.Started;
           address = 'all';
           this.gameID = msg.gameID;
           console.log("Started game with ID:", msg.gameID);
@@ -246,13 +247,13 @@ export default {
           address = 'all';
           this.moves = msg.moves;
           break;
-        case 'STOP':
+        case 'DISCONNECT':
           status = Status.Joined;
           address = 'all';
           this.connectWs(false);
           break;
       }
-      console.log(msg, address, status);
+      console.log(msg);
 
       this.setPlayerStatus(address, status);
     },
