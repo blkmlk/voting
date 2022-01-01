@@ -41,13 +41,13 @@
     <v-row justify="center">
       <v-card class="top-card">
         <v-card-title class="justify-center">
-          <span class="text-h5 mt-2">{{contractInfo.name}}</span>
+          <span class="text-name mt-2">{{contractInfo.name}}</span>
         </v-card-title>
         <v-card-text>
           <v-container>
             <v-row>
               <v-col cols="12">
-                <span class="text-h5 mt-2">{{contractInfo.description}}</span>
+                <span class="text-desc mt-2">{{contractInfo.description}}</span>
               </v-col>
             </v-row>
           </v-container>
@@ -126,7 +126,7 @@
             />
           </v-row>
           <v-row class="ml-2 mr-2" justify="center">
-            <h4 class="mt-2 mb-2 title blue-grey--text text--darken-2 font-weight-regular">{{contractInfo.target}}</h4>
+            <h4 class="text-target mt-2 mb-2 blue-grey--text text--darken-2 font-weight-regular">{{contractInfo.target}}</h4>
           </v-row>
         </v-container>
         </v-card>
@@ -422,12 +422,22 @@ export default {
 </script>
 
 <style>
+.text-name {
+  font-size: 20px
+}
+.text-desc {
+  font-size: 15px
+}
+.text-target {
+  font-size: 15px
+}
+
 .top-card {
-  width: 580px;
+  width: 400px;
 }
 .log-card {
   width: 400px;
-  height: 350px;
+  height: 270px;
 }
 .log-item-card {
   width: 250px;
