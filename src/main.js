@@ -7,7 +7,7 @@ import './plugins/base'
 import VueNativeSock from 'vue-native-websocket';
 
 Vue.config.productionTip = false
-Vue.use(VueNativeSock, '', {connectManually: true});
+Vue.use(VueNativeSock, "", {connectManually: true});
 
 new Vue({
     vuetify,

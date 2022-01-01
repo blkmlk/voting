@@ -84,9 +84,14 @@ export default {
     this.address = this.$route.params.address;
     this.generator = new AvatarGenerator();
 
-    this.$connect('ws://localhost:8090/ws', {format: 'json'})
-    this.$socket.onopen = this.onWsConnect;
-    this.$socket.onmessage = this.onWsMessage;
+    this.$connect('ws://localhost:8090/ws', {
+      format: 'json',
+      reconnection: true,
+      reconnectionAttempts: 500,
+      reconnectionDelay: 500,
+    })
+    this.$options.sockets.onopen = this.onWsConnect;
+    this.$options.sockets.onmessage = this.onWsMessage;
 
     this.timeInterval = setInterval(function (){
       this.currentTimestamp = parseInt(Date.now()/1000);
