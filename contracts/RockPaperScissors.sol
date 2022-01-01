@@ -180,6 +180,7 @@ contract RockPaperScissors {
 
     function withdraw() external {
         require(msg.sender == winner, 'only winner can withdraw');
+        require(freeSpots == 0, 'the game is not started');
 
         if (bet > 0 && !withdrawn) {
             withdrawn = true;

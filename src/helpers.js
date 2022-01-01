@@ -25,7 +25,7 @@ export function getContractExpiration(expiresAt) {
         return "expired";
     }
 
-    return (new Date(expiresAt * 1000)).toString();
+    return (new Date(expiresAt * 1000)).toLocaleString();
 }
 
 function zeroPad (num, places) {

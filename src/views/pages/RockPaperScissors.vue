@@ -5,8 +5,14 @@
         <v-icon dark color="#212121"> mdi-arrow-left-bold </v-icon>
       </v-btn>
       <v-toolbar-title class="ml-5 black--text">
-        {{contractInfo.name}}
-        {{contractExpiresIn}}
+        <v-row class="d-flex justify-space-between">
+          <v-col>
+            {{contractInfo.name}}
+          </v-col>
+          <v-col>
+            {{contractExpiresIn}}
+          </v-col>
+        </v-row>
       </v-toolbar-title>
       <v-spacer></v-spacer>
     </v-app-bar>
@@ -387,10 +393,3 @@ export default {
   }
 }
 </script>
-
-<style>
-.card {
-  height: 290px;
-  width: 250px;
-}
-</style>

@@ -64,7 +64,7 @@ export default {
       newGame: {
         name: "",
         bet: 0,
-        minutes: "0",
+        minutes: "10",
       },
       factory: null,
       gameList: [],
@@ -134,19 +134,6 @@ export default {
     },
     goToRPS(value) {
       this.$router.push("/rps/" + this.getAddress(value.id))
-    },
-    getExpiration(expiresAt) {
-      if (parseInt(expiresAt) === 0) {
-        return "not started"
-      }
-
-      let now = Date.now();
-
-      if (expiresAt * 1000 <= now) {
-        return "expired";
-      }
-
-      return (new Date(expiresAt * 1000)).toString();
     },
     getAddress(idx) {
       return this.gameList[idx].address;
