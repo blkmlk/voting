@@ -50,6 +50,7 @@
                   </v-btn>
                 </div>
                 <v-btn v-else-if="canFinish" class="mx-2 text-center" dark color="green" @click="finish">Finish</v-btn>
+                <v-btn v-else-if="canWithdraw" class="mx-2 text-center" dark color="green" @click="withdraw">Withdraw</v-btn>
               </v-row>
             </v-container>
     </v-row>
@@ -84,14 +85,7 @@ export default {
     this.address = this.$route.params.address;
     this.generator = new AvatarGenerator();
 
-    this.$connect('ws://localhost:8090/ws', {
-      format: 'json',
-      reconnection: true,
-      reconnectionAttempts: 500,
-      reconnectionDelay: 500,
-    })
-    this.$options.sockets.onopen = this.onWsConnect;
-    this.$options.sockets.onmessage = this.onWsMessage;
+    this.connectWs(true);
 
     this.timeInterval = setInterval(function (){
       this.currentTimestamp = parseInt(Date.now()/1000);
@@ -117,6 +111,7 @@ export default {
         freeSpots: 0,
         expiresAt: 0,
         winner: "",
+        withdrawn: true,
       },
       generator: null,
       moves: null,
@@ -146,6 +141,9 @@ export default {
     },
     canFinish() {
       return this.status === Status.Finishing && this.moves !== null;
+    },
+    canWithdraw() {
+      return this.status === Status.Won && !this.contractInfo.withdrawn;
     },
     finished() {
       return this.status === Status.Won;
@@ -190,6 +188,20 @@ export default {
   methods: {
     goBack() {
       this.$router.go(-1);
+    },
+    connectWs(bindHandlers) {
+      this.$disconnect();
+      this.$connect('ws://localhost:8090/ws', {
+        format: 'json',
+        reconnection: true,
+        reconnectionAttempts: 500,
+        reconnectionDelay: 500,
+      });
+
+      if (bindHandlers) {
+        this.$options.sockets.onopen = this.onWsConnect;
+        this.$options.sockets.onmessage = this.onWsMessage;
+      }
     },
     getStatus(status) {
       switch (status) {
@@ -237,6 +249,7 @@ export default {
         case 'STOP':
           status = Status.Joined;
           address = 'all';
+          this.connectWs(false);
           break;
       }
       console.log(msg, address, status);

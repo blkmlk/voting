@@ -105,7 +105,7 @@ describe("RockPaperScissors", function () {
 
             it("should reject finish", async() => {
                 await contract.connect(accounts[2]).finish(moves).catch(exp => {
-                    assert.match(exp.toString(), /the game can be finished only by players/)
+                    assert.match(exp.toString(), /player not found/)
                 });
 
                 let invalidMoves = JSON.parse(JSON.stringify(moves));
@@ -130,15 +130,19 @@ describe("RockPaperScissors", function () {
             } else {
                 it("should finish", async () => {
                     const expectedWinner = moves[c.Winner].from;
-
                     await contract.connect(accounts[0]).finish(moves);
-
                     let events = await contract.queryFilter(contract.filters.Finished());
 
                     assert.equal((await contract.players(expectedWinner)).move, moves[c.Winner].move);
                     assert.equal(await contract.winner(), expectedWinner);
                     assert.isTrue(events.length === 1);
                     assert.equal(events[0].args.winner, expectedWinner);
+                })
+
+                it("should withdraw", async () => {
+                    const expectedWinner = moves[c.Winner].from;
+                    let account = accounts.find(item => {return item.address === expectedWinner});
+                    await contract.connect(account).withdraw();
                 })
             }
         })

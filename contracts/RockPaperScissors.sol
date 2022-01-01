@@ -26,6 +26,7 @@ struct RPSInfo {
     string name;
     address owner;
     address winner;
+    bool withdrawn;
     uint256 bet;
     uint8 freeSpots;
     uint256 startBlock;
@@ -38,6 +39,7 @@ contract RockPaperScissors {
     string public name;
     address public owner;
     address public winner;
+    bool public withdrawn;
     uint256 public bet;
     uint256 public expiresAt;
     uint8 public freeSpots;
@@ -60,6 +62,7 @@ contract RockPaperScissors {
         expiresAt = block.timestamp + _expiresIn;
         freeSpots = MAX_PLAYERS;
         startBlock = block.number;
+        withdrawn = false;
 
         initOutcomes();
     }
@@ -70,6 +73,7 @@ contract RockPaperScissors {
             owner: owner,
             bet: bet,
             winner: winner,
+            withdrawn: withdrawn,
             freeSpots: freeSpots,
             startBlock: startBlock,
             expiresAt: expiresAt
@@ -171,10 +175,16 @@ contract RockPaperScissors {
 
         require(winner != address(0), 'invalid moves provided');
 
-        if (bet > 0) {
+        emit Finished(winner);
+    }
+
+    function withdraw() external {
+        require(msg.sender == winner, 'only winner can withdraw');
+
+        if (bet > 0 && !withdrawn) {
+            withdrawn = true;
             payable (winner).transfer(bet*MAX_PLAYERS);
         }
-        emit Finished(winner);
     }
 
     function initOutcomes() internal {
