@@ -365,7 +365,7 @@ export default {
       try {
         this.contract = new ethers.Contract(
             this.address,
-            this.info.IElection.abi,
+            this.info.Election.abi,
             this.$store.state.ethers.getSigner(0),
         );
       } catch(e) {

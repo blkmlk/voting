@@ -1,9 +1,27 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./ICrowdfunding.sol";
+struct CrowdfundingInfo {
+    address owner;
+    string name;
+    string description;
+    uint currentAmount;
+    uint targetAmount;
+    address target;
+    uint startBlock;
+    uint startedAt;
+    uint expiresAt;
+    bool ended;
+    bool withdrawn;
+}
 
-contract Crowdfunding is ICrowdfunding {
+struct Donation {
+    string message;
+    uint amount;
+    uint createdAt;
+}
+
+contract Crowdfunding {
     address owner;
     string name;
     string description;
@@ -31,7 +49,7 @@ contract Crowdfunding is ICrowdfunding {
         target = _target;
     }
 
-    function start(uint _expiresIn) external override {
+    function start(uint _expiresIn) external {
         require(msg.sender == owner, "CF: wrong address");
         require(_expiresIn > 0, "CF: wrong duration");
         require(expiresAt == 0, "CF: already started");
@@ -41,7 +59,7 @@ contract Crowdfunding is ICrowdfunding {
         expiresAt = startedAt + _expiresIn;
     }
 
-    function getInfo() external view override returns(CrowdfundingInfo memory) {
+    function getInfo() external view returns(CrowdfundingInfo memory) {
         return CrowdfundingInfo({
             owner: owner,
             name: name,
@@ -57,7 +75,7 @@ contract Crowdfunding is ICrowdfunding {
         });
     }
 
-    function donate(string calldata message) external payable override {
+    function donate(string calldata message) external payable {
         require(msg.sender != target, "CF: wrong address");
         require(donations[msg.sender].createdAt == 0, "CF: already donated");
         require(expiresAt != 0, "CF: not started");
@@ -89,11 +107,11 @@ contract Crowdfunding is ICrowdfunding {
         emit NewDonation(message, amount);
     }
 
-    function getDonation() external view override returns(Donation memory) {
+    function getDonation() external view returns(Donation memory) {
         return donations[msg.sender];
     }
 
-    function withdraw() external override {
+    function withdraw() external {
         uint amount;
 
         if (msg.sender == target) {

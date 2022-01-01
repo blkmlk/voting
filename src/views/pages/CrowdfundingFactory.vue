@@ -43,6 +43,8 @@
 </template>
 
 <script>
+import {getContractExpiration} from "@/helpers";
+
 const ethers = require("ethers");
 
 export default {
@@ -98,7 +100,7 @@ export default {
           target_amount: ethers.utils.formatEther(this.crowdfundingInfo[i].targetAmount).toString(),
           current_amount: ethers.utils.formatEther(this.crowdfundingInfo[i].currentAmount).toString(),
           address: this.crowdfundingInfo[i].target,
-          expires: this.getExpiration(this.crowdfundingInfo[i].expiresAt),
+          expires: getContractExpiration(this.crowdfundingInfo[i].expiresAt),
         })
       }
 
@@ -128,9 +130,8 @@ export default {
       }
 
       let targetAmount = ethers.utils.parseEther(this.newCrowdfunding.targetAmount).toString();
-      // let targetAmount = this.web3.utils.toWei(this.newCrowdfunding.targetAmount, 'ether');
 
-      this.factory.createCrowdfunding(
+      this.factory.create(
           this.newCrowdfunding.name,
           this.newCrowdfunding.description,
           targetAmount,
@@ -151,27 +152,14 @@ export default {
     goToCrowdfunding(value) {
       this.$router.push("/crowdfunding/" + this.getAddress(value.id))
     },
-    getExpiration(expiresAt) {
-      if (parseInt(expiresAt) === 0) {
-        return "not started"
-      }
-
-      let now = Date.now();
-
-      if (expiresAt * 1000 <= now) {
-        return "expired";
-      }
-
-      return (new Date(expiresAt * 1000)).toString();
-    },
     getAddress(idx) {
       return this.crowdfundingList[idx].address;
     },
     loadContract() {
       try {
         this.factory = new ethers.Contract(
-            this.info.Factory.address,
-            this.info.Factory.abi,
+            this.info.CrowdfundingFactory.address,
+            this.info.CrowdfundingFactory.abi,
             this.$store.state.ethers.getSigner(0),
         );
       } catch(e) {
@@ -206,7 +194,7 @@ export default {
         return;
       }
 
-      factory.getCrowdfunding().then(function (items) {
+      factory.list().then(function (items) {
         if (items === null) {
           return
         }
@@ -215,7 +203,7 @@ export default {
         for (const address of items) {
           let contract = new ethers.Contract(
               address,
-              this.info.ICrowdfunding.abi,
+              this.info.Crowdfunding.abi,
               this.$store.state.ethers.getSigner(0),
           );
           contracts.push(contract);

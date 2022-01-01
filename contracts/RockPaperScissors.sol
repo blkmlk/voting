@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "hardhat/console.sol";
-
 enum Move {
     NONE,
     ROCK,
@@ -20,41 +18,73 @@ struct PlayerMove {
     address from;
     Move move;
     uint256 nonce;
+    uint256 gameID;
     bytes signature;
+}
+
+struct RPSInfo {
+    string name;
+    address owner;
+    address winner;
+    bool withdrawn;
+    uint256 bet;
+    uint8 freeSpots;
+    uint256 startBlock;
+    uint256 expiresAt;
 }
 
 contract RockPaperScissors {
     uint8 constant MAX_PLAYERS = 2;
 
+    string public name;
     address public owner;
     address public winner;
+    bool public withdrawn;
     uint256 public bet;
+    uint256 public expiresAt;
     uint8 public freeSpots;
+    uint256 public startBlock;
     mapping(address => Player) public players;
 
     mapping(Move => mapping(Move => uint8)) internal outcomes;
 
     event Started();
+    event Joined(address player);
+    event Left(address player);
     event Finished(address winner);
 
-    constructor(uint256 _bet) payable {
-        owner = msg.sender;
-        require(_bet == msg.value, 'invalid value');
+    constructor(string memory _name, address _owner, uint256 _bet, uint _expiresIn) {
+        require(_expiresIn > 0, 'expiration time should be positive');
+
+        name = _name;
+        owner = _owner;
         bet = _bet;
-        freeSpots = MAX_PLAYERS-1;
-        players[msg.sender] = Player({
-            move: Move.NONE,
-            verified: false,
-            exists: true
-        });
+        expiresAt = block.timestamp + _expiresIn;
+        freeSpots = MAX_PLAYERS;
+        startBlock = block.number;
+        withdrawn = false;
 
         initOutcomes();
+    }
+
+    function getInfo() external view returns (RPSInfo memory) {
+        return RPSInfo({
+            name: name,
+            owner: owner,
+            bet: bet,
+            winner: winner,
+            withdrawn: withdrawn,
+            freeSpots: freeSpots,
+            startBlock: startBlock,
+            expiresAt: expiresAt
+        });
     }
 
     function join() external payable {
         require(msg.value == bet, 'value does not equal to the bet');
         require(freeSpots > 0, 'no free spot');
         require(!players[msg.sender].exists, 'player already joined the game');
+        require(block.timestamp <= expiresAt, 'the game is expired');
 
         freeSpots--;
 
@@ -67,18 +97,38 @@ contract RockPaperScissors {
             verified: false,
             exists: true
         });
+
+        emit Joined(msg.sender);
+    }
+
+    function leave() external {
+        require(players[msg.sender].exists, 'player not found');
+        require(winner == address(0), 'the game is already finished');
+        require(freeSpots > 0 || block.timestamp > expiresAt, 'the game is already started');
+
+        delete players[msg.sender];
+        freeSpots++;
+        payable (msg.sender).transfer(bet);
+
+        emit Left(msg.sender);
     }
 
     function finish(PlayerMove[] calldata _moves) external {
-        require(winner == address(0), 'the game is already finished');
+        require(players[msg.sender].exists, 'player not found');
         require(_moves.length == MAX_PLAYERS, 'wrong number of player moves');
         require(freeSpots == 0, 'the game is not started');
+
+        if (winner != address(0)) {
+            return;
+        }
 
         bytes32 hash;
         bytes32 r;
         bytes32 s;
         uint8 v;
         bool found = false;
+
+        require(_moves[0].gameID == _moves[1].gameID, 'gameID values must be the same');
 
         for(uint i = 0; i < _moves.length; i++) {
             PlayerMove calldata m = _moves[i];
@@ -91,7 +141,7 @@ contract RockPaperScissors {
             require(!player.verified, 'player is already verified');
 
             hash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32",
-                keccak256(abi.encodePacked(m.nonce, m.nonce))));
+                keccak256(abi.encodePacked(m.nonce, m.gameID, m.move))));
 
             bytes memory signature = m.signature;
 
@@ -125,10 +175,17 @@ contract RockPaperScissors {
 
         require(winner != address(0), 'invalid moves provided');
 
-        if (bet > 0) {
+        emit Finished(winner);
+    }
+
+    function withdraw() external {
+        require(msg.sender == winner, 'only winner can withdraw');
+        require(freeSpots == 0, 'the game is not started');
+
+        if (bet > 0 && !withdrawn) {
+            withdrawn = true;
             payable (winner).transfer(bet*MAX_PLAYERS);
         }
-        emit Finished(winner);
     }
 
     function initOutcomes() internal {

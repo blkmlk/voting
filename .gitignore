@@ -19,3 +19,9 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.sw?
+
+# hardhat
+artifacts
+cache
+src/artifacts
+src/contracts

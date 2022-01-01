@@ -35,15 +35,9 @@ describe("RockPaperScissors", function () {
                 accounts = await ethers.getSigners();
 
                 RPS = await ethers.getContractFactory("RockPaperScissors");
-                contract = await RPS.connect(accounts[0]).deploy(bet, {value: bet});
+                contract = await RPS.connect(accounts[0]).deploy("test", accounts[0].address, bet, 10*60);
                 await contract.deployed();
-            })
-
-            it("should require valid value", async () => {
-                await RPS.connect(accounts[0]).deploy(10).catch(exp => {
-                    assert.match(exp.toString(), /invalid value/);
-                })
-                await RPS.connect(accounts[0]).deploy(10, {value: 10})
+                await contract.connect(accounts[0]).join({value: bet});
             })
 
             it("should reject join", async () => {
@@ -53,6 +47,11 @@ describe("RockPaperScissors", function () {
                 await contract.connect(accounts[0]).join({value: bet}).catch(exp => {
                     assert.match(exp.toString(), /player already joined the game/);
                 });
+            })
+
+            it("should leave", async () => {
+                await contract.connect(accounts[0]).leave();
+                await contract.connect(accounts[0]).join({value: bet});
             })
 
             it("should join", async () => {
@@ -69,16 +68,19 @@ describe("RockPaperScissors", function () {
 
             let moves = [];
             it("should prepare moves", async () => {
+                const gameID = Math.floor(Math.random() * 1e10)
+
                 {
                     const nonce = Math.floor(Math.random() * 1e10)
                     let move = Moves[c.MoveA];
-                    let message = ethers.utils.solidityKeccak256(['uint256', 'uint256'], [nonce, nonce]);
+                    let message = ethers.utils.solidityKeccak256(['uint256', 'uint256', 'uint8'], [nonce, gameID, move]);
                     let signature = await signMessage(accounts[0], message);
 
                     moves.push({
                         from: accounts[0].address,
                         move: move,
                         nonce: nonce,
+                        gameID: gameID,
                         hash: message,
                         signature: signature,
                     })
@@ -87,13 +89,14 @@ describe("RockPaperScissors", function () {
                 {
                     const nonce = Math.floor(Math.random() * 1e10)
                     let move = Moves[c.MoveB];
-                    let message = ethers.utils.solidityKeccak256(['uint256', 'uint256'], [nonce, nonce]);
+                    let message = ethers.utils.solidityKeccak256(['uint256', 'uint256', 'uint8'], [nonce, gameID, move]);
                     let signature = await signMessage(accounts[1], message);
 
                     moves.push({
                         from: accounts[1].address,
                         move: move,
                         nonce: nonce,
+                        gameID: gameID,
                         hash: message,
                         signature: signature,
                     })
@@ -102,13 +105,19 @@ describe("RockPaperScissors", function () {
 
             it("should reject finish", async() => {
                 await contract.connect(accounts[2]).finish(moves).catch(exp => {
-                    assert.match(exp.toString(), /the game can be finished only by players/)
+                    assert.match(exp.toString(), /player not found/)
                 });
 
                 let invalidMoves = JSON.parse(JSON.stringify(moves));
                 invalidMoves[0].from = accounts[2].address;
                 await contract.connect(accounts[0]).finish(invalidMoves).catch(exp => {
                     assert.match(exp.toString(), /player does not exist/)
+                });
+
+                invalidMoves = JSON.parse(JSON.stringify(moves));
+                invalidMoves[0].gameID = 0;
+                await contract.connect(accounts[0]).finish(invalidMoves).catch(exp => {
+                    assert.match(exp.toString(), /gameID values must be the same/)
                 });
             })
 
@@ -121,15 +130,19 @@ describe("RockPaperScissors", function () {
             } else {
                 it("should finish", async () => {
                     const expectedWinner = moves[c.Winner].from;
-
                     await contract.connect(accounts[0]).finish(moves);
-
                     let events = await contract.queryFilter(contract.filters.Finished());
 
                     assert.equal((await contract.players(expectedWinner)).move, moves[c.Winner].move);
                     assert.equal(await contract.winner(), expectedWinner);
                     assert.isTrue(events.length === 1);
                     assert.equal(events[0].args.winner, expectedWinner);
+                })
+
+                it("should withdraw", async () => {
+                    const expectedWinner = moves[c.Winner].from;
+                    let account = accounts.find(item => {return item.address === expectedWinner});
+                    await contract.connect(account).withdraw();
                 })
             }
         })

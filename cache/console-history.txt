@@ -1,6 +1,0 @@
-check
-?
-help
-h
-help
-?

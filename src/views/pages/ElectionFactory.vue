@@ -40,6 +40,8 @@
 </template>
 
 <script>
+import {getContractExpiration} from "@/helpers";
+
 const ethers = require("ethers");
 
 export default {
@@ -88,7 +90,7 @@ export default {
           owner: this.electionInfo[i].owner,
           candidates: this.electionInfo[i].candidates.length,
           votes: this.electionInfo[i].votes,
-          expires: this.getExpiration(this.electionInfo[i].expiresAt),
+          expires: getContractExpiration(this.electionInfo[i].expiresAt),
         })
       }
 
@@ -105,7 +107,7 @@ export default {
         return;
       }
 
-      this.factory.createElection(this.newElectionName).then(function () {
+      this.factory.create(this.newElectionName).then(function () {
         this.newElectionName = "";
         this.newDialog = false;
       }.bind(this))
@@ -118,27 +120,14 @@ export default {
     goToElection(value) {
       this.$router.push("/election/" + this.getAddress(value.id))
     },
-    getExpiration(expiresAt) {
-      if (parseInt(expiresAt) === 0) {
-        return "not started"
-      }
-
-      let now = Date.now();
-
-      if (expiresAt * 1000 <= now) {
-        return "expired";
-      }
-
-      return (new Date(expiresAt * 1000)).toString();
-    },
     getAddress(idx) {
       return this.elections[idx].address;
     },
     loadContract() {
       try {
         this.factory = new ethers.Contract(
-            this.info.Factory.address,
-            this.info.Factory.abi,
+            this.info.ElectionFactory.address,
+            this.info.ElectionFactory.abi,
             this.$store.state.ethers.getSigner(0));
       } catch(e) {
         console.log(e);
@@ -172,12 +161,12 @@ export default {
         return;
       }
 
-      factory.getElections().then(function (elections) {
+      factory.list().then(function (elections) {
         let contracts = [];
         for (const address of elections) {
           let contract = new ethers.Contract(
               address,
-              this.info.IElection.abi,
+              this.info.Election.abi,
               this.$store.state.ethers.getSigner(0),
           );
           contracts.push(contract);
