@@ -43,6 +43,8 @@
 </template>
 
 <script>
+import {getContractExpiration} from "@/helpers";
+
 const ethers = require("ethers");
 
 export default {
@@ -98,7 +100,7 @@ export default {
           target_amount: ethers.utils.formatEther(this.crowdfundingInfo[i].targetAmount).toString(),
           current_amount: ethers.utils.formatEther(this.crowdfundingInfo[i].currentAmount).toString(),
           address: this.crowdfundingInfo[i].target,
-          expires: this.getExpiration(this.crowdfundingInfo[i].expiresAt),
+          expires: getContractExpiration(this.crowdfundingInfo[i].expiresAt),
         })
       }
 
@@ -149,19 +151,6 @@ export default {
     },
     goToCrowdfunding(value) {
       this.$router.push("/crowdfunding/" + this.getAddress(value.id))
-    },
-    getExpiration(expiresAt) {
-      if (parseInt(expiresAt) === 0) {
-        return "not started"
-      }
-
-      let now = Date.now();
-
-      if (expiresAt * 1000 <= now) {
-        return "expired";
-      }
-
-      return (new Date(expiresAt * 1000)).toString();
     },
     getAddress(idx) {
       return this.crowdfundingList[idx].address;

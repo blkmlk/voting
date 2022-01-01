@@ -45,6 +45,8 @@
 </template>
 
 <script>
+import {getContractExpiration} from "@/helpers";
+
 const ethers = require("ethers");
 
 export default {
@@ -56,6 +58,7 @@ export default {
         {text: "Name", value: "name"},
         {text: "Owner", value: "owner"},
         {text: "Bet", value: "bet"},
+        {text: "Expires At", value: "expires"}
       ],
       newDialog: false,
       newGame: {
@@ -94,6 +97,7 @@ export default {
           name: this.gameInfo[i].name,
           owner: this.gameInfo[i].owner,
           bet: ethers.utils.formatEther(this.gameInfo[i].bet).toString(),
+          expires: getContractExpiration(this.gameInfo[i].expiresAt),
         })
       }
 

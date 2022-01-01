@@ -14,6 +14,20 @@ export function getRemainingTime(expiresAt, now) {
     return zeroPad(hours, 2) + ":" + zeroPad(minutes, 2) + ":" + zeroPad(seconds, 2);
 }
 
+export function getContractExpiration(expiresAt) {
+    if (parseInt(expiresAt) === 0) {
+        return "not started"
+    }
+
+    let now = Date.now();
+
+    if (expiresAt * 1000 <= now) {
+        return "expired";
+    }
+
+    return (new Date(expiresAt * 1000)).toString();
+}
+
 function zeroPad (num, places) {
     return String(num).padStart(places, '0');
 }

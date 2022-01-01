@@ -40,6 +40,8 @@
 </template>
 
 <script>
+import {getContractExpiration} from "@/helpers";
+
 const ethers = require("ethers");
 
 export default {
@@ -88,7 +90,7 @@ export default {
           owner: this.electionInfo[i].owner,
           candidates: this.electionInfo[i].candidates.length,
           votes: this.electionInfo[i].votes,
-          expires: this.getExpiration(this.electionInfo[i].expiresAt),
+          expires: getContractExpiration(this.electionInfo[i].expiresAt),
         })
       }
 
@@ -117,19 +119,6 @@ export default {
     },
     goToElection(value) {
       this.$router.push("/election/" + this.getAddress(value.id))
-    },
-    getExpiration(expiresAt) {
-      if (parseInt(expiresAt) === 0) {
-        return "not started"
-      }
-
-      let now = Date.now();
-
-      if (expiresAt * 1000 <= now) {
-        return "expired";
-      }
-
-      return (new Date(expiresAt * 1000)).toString();
     },
     getAddress(idx) {
       return this.elections[idx].address;
