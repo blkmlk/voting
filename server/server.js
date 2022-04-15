@@ -1,6 +1,5 @@
 const WebSocket = require("ws");
 const ethers = require("ethers");
-const crypto = require('crypto');
 
 const config = require('./config.js');
 const info = require('../src/artifacts/info.json');
