@@ -119,6 +119,19 @@ describe("RockPaperScissorsCommit", function () {
                 });
             })
 
+            it("should not prove", async () => {
+                let proved = await contract.proved();
+                assert.equal(proved, "0", "invalid proved value");
+
+                let moveA = Moves[c.MoveA];
+                await contract.connect(accounts[0]).prove(c.nonceB, moveA).catch(exp => {
+                    assert.match(exp.toString(), /invalid commit/);
+                });
+
+                proved = await contract.proved();
+                assert.equal(proved, "0", "invalid proved value");
+            })
+
             it("should prove", async () => {
                 let proved = await contract.proved();
                 assert.equal(proved, "0", "invalid proved value");
@@ -134,6 +147,31 @@ describe("RockPaperScissorsCommit", function () {
 
                 proved = await contract.proved();
                 assert.equal(proved, "2", "invalid proved value");
+            })
+
+            it("should finish", async () => {
+                let finished = await contract.finished();
+                assert.isTrue(!finished, "invalid finished value");
+
+                await contract.connect(accounts[0]).finish({gasPrice: 20000000000}).catch(exp => {
+                    console.log(exp.toString())
+                });
+
+                let balance = await ethers.provider.getBalance(contract.address);
+                assert.equal(balance.toString(), "0", "invalid balance");
+
+                let winner = await contract.winner();
+                switch (c.Winner) {
+                    case 1:
+                        assert.equal(accounts[1].address, winner);
+                        break;
+                    case 0:
+                        assert.equal(accounts[0].address, winner);
+                        break
+                    case -1:
+                        assert.equal(0, parseInt(winner));
+                        break
+                }
             })
         })
     })

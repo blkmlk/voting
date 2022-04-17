@@ -74,7 +74,7 @@ contract RockPaperScissorsCommit {
 
         for (uint256 i = 0; i < playerAddresses.length; i++) {
             if (playerAddresses[i] == msg.sender) {
-                delete playerAddresses[i];
+                _deletePlayer(i);
                 break;
             }
         }
@@ -120,6 +120,7 @@ contract RockPaperScissorsCommit {
     function finish() external {
         require(!finished, "already finished");
         require(proved == 2 || (proved == 1 && block.timestamp > mustBeProvedBefore), "not proved yet");
+        require(playerAddresses.length == 2, "not enough players");
 
         Move move1 = players[playerAddresses[0]].move;
         Move move2 = players[playerAddresses[1]].move;
@@ -138,6 +139,10 @@ contract RockPaperScissorsCommit {
 
         if (winner != address(0)) {
             payable(winner).transfer(address(this).balance);
+        } else {
+            for(uint256 i = 0; i < playerAddresses.length; i++) {
+                payable(playerAddresses[i]).transfer(bet);
+            }
         }
         emit Finished(winner);
     }
@@ -153,5 +158,10 @@ contract RockPaperScissorsCommit {
 
     function _getHash(uint256 _nonce, Move _move) internal view returns (bytes32) {
         return keccak256(abi.encodePacked(address(this), _nonce, _move));
+    }
+
+    function _deletePlayer(uint256 _idx) internal {
+        playerAddresses[_idx] = playerAddresses[playerAddresses.length-1];
+        playerAddresses.pop();
     }
 }
