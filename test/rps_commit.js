@@ -150,12 +150,20 @@ describe("RockPaperScissorsCommit", function () {
             })
 
             it("should finish", async () => {
+                let balanceA = await ethers.provider.getBalance(accounts[0].address);
+                let balanceB = await ethers.provider.getBalance(accounts[1].address);
+
                 let finished = await contract.finished();
                 assert.isTrue(!finished, "invalid finished value");
 
-                await contract.connect(accounts[0]).finish({gasPrice: 20000000000}).catch(exp => {
-                    console.log(exp.toString())
+                let gasUsed
+                await contract.connect(accounts[0]).finish({gasPrice: 20000000000}).then(async function(tx) {
+                    let details = await tx.wait()
+                    gasUsed = details.cumulativeGasUsed.mul(details.effectiveGasPrice)
                 });
+
+                let newBalanceA = await ethers.provider.getBalance(accounts[0].address);
+                let newBalanceB = await ethers.provider.getBalance(accounts[1].address);
 
                 let balance = await ethers.provider.getBalance(contract.address);
                 assert.equal(balance.toString(), "0", "invalid balance");
@@ -164,12 +172,18 @@ describe("RockPaperScissorsCommit", function () {
                 switch (c.Winner) {
                     case 1:
                         assert.equal(accounts[1].address, winner);
+                        assert.isTrue(balanceB.add(bet.mul(2)).eq(newBalanceB))
+                        assert.isTrue(balanceA.sub(gasUsed).eq(newBalanceA))
                         break;
                     case 0:
                         assert.equal(accounts[0].address, winner);
+                        assert.isTrue(balanceA.sub(gasUsed).add(bet.mul(2)).eq(newBalanceA))
+                        assert.isTrue(balanceB.eq(newBalanceB))
                         break
                     case -1:
                         assert.equal(0, parseInt(winner));
+                        assert.isTrue(balanceA.sub(gasUsed).add(bet).eq(newBalanceA))
+                        assert.isTrue(balanceB.add(bet).eq(newBalanceB))
                         break
                 }
             })
