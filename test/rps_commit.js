@@ -157,7 +157,7 @@ describe("RockPaperScissorsCommit", function () {
                 assert.isTrue(!finished, "invalid finished value");
 
                 let gasUsed
-                await contract.connect(accounts[0]).finish({gasPrice: 20000000000}).then(async function(tx) {
+                await contract.connect(accounts[0]).finish().then(async function(tx) {
                     let details = await tx.wait()
                     gasUsed = details.cumulativeGasUsed.mul(details.effectiveGasPrice)
                 });
