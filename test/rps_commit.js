@@ -180,7 +180,7 @@ describe("RockPaperScissorsCommit", function () {
                         assert.isTrue(balanceA.sub(gasUsed).add(bet.mul(2)).eq(newBalanceA))
                         assert.isTrue(balanceB.eq(newBalanceB))
                         break
-                    case -1:
+                    case -1: // draw
                         assert.equal(0, parseInt(winner));
                         assert.isTrue(balanceA.sub(gasUsed).add(bet).eq(newBalanceA))
                         assert.isTrue(balanceB.add(bet).eq(newBalanceB))
